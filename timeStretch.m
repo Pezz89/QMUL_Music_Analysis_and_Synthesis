@@ -62,6 +62,7 @@ end
 analysis = analysis - mean(analysis);
 analysis = analysis / max(analysis)
 
+% TODO: Absolute values seems odd and possibly wrong... check this...
 thresh = zeros(length(analysis)-2, 1);
 for i = 3:length(analysis)
     thresh(i-2) = mean( ...
@@ -71,31 +72,58 @@ for i = 3:length(analysis)
     );
 end
 thresh
-delta = 0.01;
-lambda = 0.05;
+delta = 0.05;
+lambda = 1.00;
 
 a = zeros(length(thresh),1);
 a(i) = analysis(1) > thresh(1);
 for i = 3:length(thresh)
     if a(i-2) == true
-        analysis(i)
-        delta
-        thresh(i-2)
-        a(i-1) = analysis(i) > delta - thresh(i-2);
+        a(i-1) = analysis(i) > delta - lambda * thresh(i-2);
     else
-        a(i-1) = analysis(i) > delta + thresh(i-2);
+        a(i-1) = analysis(i) > delta + lambda * thresh(i-2);
     end
 end
 
-figure
-%plot(DAFx_in)
-%hold on;
-plot(((1:win_count)*n1)+WLen/2,a)
-hold on;
-plot(((1:win_count)*n1)+WLen/2,analysis)
+if(false)
+    figure
+    %plot(DAFx_in)
+    %hold on;
+    plot(((1:win_count)*n1)+WLen/2,a)
+    hold on;
+    plot(((1:win_count)*n1)+WLen/2,analysis)
+end
 
+% Code adapted from https://uk.mathworks.com/matlabcentral/newsreader/view_thread/151318
+krn=[1 -1];
+changes=conv(krn, a);
+% Calculate start and end window indexes of transient segments
+t_s = find(changes==1);
+t_e = find(changes==-1);
 
+% Convert window index to samples
+% TODO: Check sample accuracy of this...
+transience_s = t_s * n1;
+transience_e = t_e * n1;
+
+s1.analysis = analysis';
+s1.transience_e = transience_e' ;
+s1.transience_s = transience_s';
+s1.a = a';
+s1.win_count = win_count;
+s1.n1 = n1;
+s1.WLen = WLen;
+
+save('./vars.mat','-struct', 's1')
+
+if(false)
+    figure
+    %plot(DAFx_in)
+    plot(((1:win_count)*n1)+WLen/2,analysis)
+    plot()
+end
 return
+
 %-------------------------------
 
 %----- time stretching initializations -----
