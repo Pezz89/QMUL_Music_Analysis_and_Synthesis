@@ -35,14 +35,14 @@ function timeStretch(fileName, ratio)
     theta2 = zeros(WLen,1);
     mag1 = zeros(WLen/2,1);
     mag2 = zeros(WLen/2,1);
-    win_count = floor((length(DAFx_in)-WLen)/n1);
+    win_count = floor((length(DAFx_in)-WLen)/n1)
     analysis = zeros(win_count, 1);
 
     pin  = 0;
     pout = 1;
     pend = length(DAFx_in)-WLen;
     %----- transience analysis -----
-    while pin<pend
+    while pout<win_count
         grain = DAFx_in(pin+1:pin+WLen).* w1;
         f = fft(grain);
         mag = abs(f(1:WLen/2));
@@ -59,7 +59,7 @@ function timeStretch(fileName, ratio)
 
     % Normalize analysis
     analysis = analysis - mean(analysis);
-    analysis = analysis / max(analysis)
+    analysis = analysis / max(analysis);
 
     % TODO: Absolute values seems odd and possibly wrong... check this...
     thresh = zeros(length(analysis)-2, 1);
@@ -70,9 +70,8 @@ function timeStretch(fileName, ratio)
             abs(analysis(i-2))]...
         );
     end
-    thresh
-    delta = 0.05;
-    lambda = 1.00;
+    delta = 0.1;
+    lambda = 0.0;
 
     a = zeros(length(thresh),1);
     a(i) = analysis(1) > thresh(1);
@@ -106,6 +105,7 @@ function timeStretch(fileName, ratio)
     transience_e = t_e * n1;
 
     % Export variables to mat file for plotting in Python
+    win_count
     s1.analysis = analysis';
     s1.transience_e = transience_e' ;
     s1.transience_s = transience_s';
@@ -136,12 +136,25 @@ function timeStretchStable(in, FS,  stable, ratio)
 
     tic
     %UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
-    pin  = 0;
-    pout = 0;
+    pin  = -n1;
+    pout = -n1;
     pend = length(in)-WLen;
+
     while pin<pend
+        if(any(pin >= stable(:, 1) & pin+WLen < stable(:, 2)))
+            pin  = pin + n1;
+            pout = pout + n2;
+        else
+            pin  = pin + n1;
+            pout = pout + n1;
+        end
+        if(pin>=pend)
+            break;
+        end
+
         grain = in(pin+1:pin+WLen).* w1;
-        if(any(pin >= stable(:, 1) & pin < stable(:, 2)))
+
+        if(any(pin >= stable(:, 1) & pin+WLen < stable(:, 2)))
             %===========================================
             f     = fft(fftshift(grain));
             r     = abs(f);
@@ -156,13 +169,17 @@ function timeStretchStable(in, FS,  stable, ratio)
             out(pout+1:pout+WLen) = ...
                out(pout+1:pout+WLen) + grain;
 
-            pin  = pin + n1;
-            pout = pout + n2;
         else
+            f     = fft(fftshift(grain));
+            r     = abs(f);
+            phi   = angle(f);
+            delta_phi= omega + princarg(phi-phi0-omega);
+            phi0  = phi;
+            psi   = princarg(psi+delta_phi);
+            ft    = (r.* exp(i*psi));
+            grain = fftshift(real(ifft(ft))).*w2;
             out(pout+1:pout+WLen) = ...
-               out(pout+1:pout+WLen) + grain;
-            pin  = pin + n1;
-            pout = pout + n1;
+               out(pout+1:pout+WLen) + grain/tstretch_ratio;
         end
     end
     %UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU

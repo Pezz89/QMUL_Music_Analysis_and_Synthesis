@@ -1,5 +1,5 @@
 function main()
-    fileName = './media/test3.wav';
-    ratio = 10.5;
+    fileName = './media/Limbo1.wav';
+    ratio = 5;
     timeStretch(fileName, ratio);
 
