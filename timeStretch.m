@@ -60,17 +60,21 @@ function timeStretch(fileName, ratio)
     % Normalize analysis
     analysis = analysis - mean(analysis);
     analysis = analysis / max(analysis);
+    
+    analysis = analysis - filter(ones(1, 50)/50, 1, analysis); 
+
+
 
     % TODO: Absolute values seems odd and possibly wrong... check this...
-    thresh = zeros(length(analysis)-2, 1);
-    for i = 3:length(analysis)
-        thresh(i-2) = mean( ...
-            [abs(analysis(i)), ...
-            abs(analysis(i-1)),...
-            abs(analysis(i-2))]...
+    thresh = zeros(length(analysis)-4, 1);
+    for i = 3:length(analysis)-2
+        thresh(i-2) = median( ...
+            [analysis(i), ...
+            analysis(i-1),...
+            analysis(i-2)]...
         );
     end
-    delta = 0.1;
+    delta = 0.05;
     lambda = 0.0;
 
     a = zeros(length(thresh),1);
@@ -136,6 +140,7 @@ function timeStretchStable(in, FS,  stable, ratio)
 
     tic
     %UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+    % TODO: These cannot stay initialized like this.
     pin  = -n1;
     pout = -n1;
     pend = length(in)-WLen;
@@ -145,8 +150,8 @@ function timeStretchStable(in, FS,  stable, ratio)
             pin  = pin + n1;
             pout = pout + n2;
         else
-            pin  = pin + n1;
-            pout = pout + n1;
+            pin  = pin + n2;
+            pout = pout + n2;
         end
         if(pin>=pend)
             break;
@@ -179,7 +184,7 @@ function timeStretchStable(in, FS,  stable, ratio)
             ft    = (r.* exp(i*psi));
             grain = fftshift(real(ifft(ft))).*w2;
             out(pout+1:pout+WLen) = ...
-               out(pout+1:pout+WLen) + grain/tstretch_ratio;
+               out(pout+1:pout+WLen) + grain;%/tstretch_ratio;
         end
     end
     %UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
