@@ -13,39 +13,51 @@ function timeStretch(fileName, ratio)
         error('usage: timeStretch(fileName, ratio)');
     end
 
-    %----- user data -----
-    n2           = 512; % analysis step [samples]
-    hopSize           = round(n2 / ratio); % synthesis step [samples]
-    WLen         = 2048; % Window length
+    % Analysis step [samples]
+    n2 = 512;
+    % Synthesis step [samples]
+    hopSize = round(n2 / ratio);
+    % Window length
+    WLen = 2048;
 
     % Read input to be stretched and get relevant meta-data
-    [DAFx_in,FS] = audioread(fileName);
+    [in,FS] = audioread(fileName);
     inputInfo = (audioinfo(fileName));
     channels = inputInfo.NumChannels;
 
-    % Sum to mono
+    % Sum audio to mono
     if channels > 1
-        DAFx_in = sum(DAFx_in,2);
+        in = sum(in,2);
     end
 
     % Calculate the length of the input in samples
-    L            = length(DAFx_in);
+    L = length(in);
     % Zero-pad input to allow for windowed analysis accross entire file and
     % normalise.
-    DAFx_in      = [zeros(WLen, 1); DAFx_in; ...
-       zeros(WLen-mod(L,hopSize),1)] / max(abs(DAFx_in));
+    in = [zeros(WLen, 1); in; ...
+       zeros(WLen-mod(L,hopSize),1)] / max(abs(in));
 
     delta = 0.2;
-    [stable, stable_ratio] = calculateAnalysis(DAFx_in, FS, WLen, hopSize, delta);
+    % Segment audio based on it's trasient and stables components, returning
+    % markers for stable sections and a ratio for their proportion of all the
+    % audio
+    [stable, stable_ratio] = segmentTransience(in, FS, WLen, hopSize, delta);
 
-    timeStretchStable(DAFx_in, FS, stable, ratio / stable_ratio);
+    % Use stable transient/stable segmentation to stretch stable section of
+    % audio by a given ratio.
+    timeStretchStable(in, FS, stable, ratio / stable_ratio);
 
-function [stable, stable_ratio] = calculateAnalysis(in, FS, WLen, hopSize, delta)
-
+function [stable, stable_ratio] = segmentTransience(in, FS, WLen, hopSize, delta)
+    % Calculate the spectral flux of the audio. This provides a measurements
+    % for transience accross the audio
     [analysis, winCount] = calculateSpectralFlux(in, WLen, hopSize);
 
+    % Normalise and filter the analysis to provide data that can be used for
+    % effective transience segmentation.
     analysis = normaliseAnalysis(analysis, delta);
 
+    % Generate segmentation markers from analysis to be used in the time
+    % stretching algorithm
     [stable, stable_ratio] = getStable(in, analysis, WLen, delta, hopSize);
 
 function timeStretchStable(in, FS,  stable, ratio)
@@ -134,7 +146,7 @@ function [stable, ratio] = getStable(in, analysis, delta, WLen, hopSize)
     % TODO: Convert to Python
     if(false)
         figure
-        plot(DAFx_in)
+        plot(in)
         hold on;
         plot(((1:winCount)*hopSize)+WLen/2,a)
         hold on;
@@ -172,12 +184,18 @@ function [stable, ratio] = getStable(in, analysis, delta, WLen, hopSize)
 
     % Get the length of the input audio
     L = length(in);
+    % Prepend 0 representing the start of the audio
+    % Append L, representing the end of the audio
     if(transience_s(1) ~= 0)
         transience_e = [0; transience_e];
         transience_s = [transience_s; L];
     end
+
+    % Join transience markers in vertical columns to create start and end
+    % marker pairs, representing the start and ends of stable sections.
     stable = horzcat(transience_e, transience_s);
-    stable(:, 2) - stable(:, 1);
+    % Calculate the ratio between the total length of the audio and it's
+    % stable parts.
     ratio = sum(stable(:, 2) - stable(:, 1)) / L;
 
 function [analysis, winCount] = calculateSpectralFlux(in, WLen, hopSize)
