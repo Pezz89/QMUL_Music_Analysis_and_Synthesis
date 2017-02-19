@@ -35,15 +35,18 @@ function timeStretch(fileName, ratio)
     DAFx_in      = [zeros(WLen, 1); DAFx_in; ...
        zeros(WLen-mod(L,hopSize),1)] / max(abs(DAFx_in));
 
-    [analysis, winCount] = calculateAnalysis(DAFx_in, WLen, hopSize);
-
     delta = 0.2;
-    analysis = normaliseAnalysis(analysis, delta);
-
-
-    [stable, stable_ratio] = getStable(DAFx_in, analysis, WLen, delta, hopSize);
+    [stable, stable_ratio] = calculateAnalysis(DAFx_in, FS, WLen, hopSize, delta);
 
     timeStretchStable(DAFx_in, FS, stable, ratio / stable_ratio);
+
+function [stable, stable_ratio] = calculateAnalysis(in, FS, WLen, hopSize, delta)
+
+    [analysis, winCount] = calculateSpectralFlux(in, WLen, hopSize);
+
+    analysis = normaliseAnalysis(analysis, delta);
+
+    [stable, stable_ratio] = getStable(in, analysis, WLen, delta, hopSize);
 
 function timeStretchStable(in, FS,  stable, ratio)
     %----- time stretching initializations -----
@@ -61,8 +64,6 @@ function timeStretchStable(in, FS,  stable, ratio)
 
     devcent = 2*pi*n1/WLen;
 
-    tic
-    %UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
     pin  = 0;
     pout = 0;
     pend = length(in)-WLen;
@@ -101,8 +102,6 @@ function timeStretchStable(in, FS,  stable, ratio)
             pout = pout + n1;
         end
     end
-    %UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
-    toc
 
     %----- listening and saving the output -----
     %in  = in(WLen+1:WLen+L);
@@ -125,10 +124,12 @@ function [stable, ratio] = getStable(in, analysis, delta, WLen, hopSize)
 
     % Enables the saving of variables to mat files for plotting in Python
     pythonPlot = true;
-    delta = 0
+    % TODO: do something with this...
+    delta = 0;
 
     winCount = floor((length(in)-WLen)/hopSize);
-    a = double(analysis > delta)
+    % create boolean array of analysis values above a set threshold delta
+    a = double(analysis > delta);
 
     % TODO: Convert to Python
     if(false)
@@ -142,9 +143,10 @@ function [stable, ratio] = getStable(in, analysis, delta, WLen, hopSize)
 
     % Code adapted from https://uk.mathworks.com/matlabcentral/newsreader/view_thread/151318
     krn=[1 -1];
-    changes=conv(krn, a)
+    changes=conv(krn, a);
+
     % Calculate start and end window indexes of transient segments
-    t_s = find(changes==1)
+    t_s = find(changes==1);
     t_e = find(changes==-1);
 
     % Convert window index to samples
@@ -178,33 +180,43 @@ function [stable, ratio] = getStable(in, analysis, delta, WLen, hopSize)
     stable(:, 2) - stable(:, 1);
     ratio = sum(stable(:, 2) - stable(:, 1)) / L;
 
-function [analysis, winCount] = calculateAnalysis(in, WLen, hopSize)
+function [analysis, winCount] = calculateSpectralFlux(in, WLen, hopSize)
     %----- transience analysis initialization -----
-    test = 0.4;
     % Allocate memory to store the current grain to be analysed
     grain = zeros(WLen,1);
     % Allocate memory to store the previous window's magnitude during analysis
-    w1           = hanning(WLen); % Analysis Hanning window of length WLen
+    w1 = hanning(WLen); % Analysis Hanning window of length WLen
     mag1 = zeros(WLen/2,1);
     % Calculate the total number of windows to be analysed
     winCount = floor((length(in)-WLen)/hopSize);
     % Allocate memory to store outut analysis values
     analysis = zeros(winCount, 1);
 
+    % Declare start and end indexes for reading from and writing to memory
     pin  = 0;
     pout = 1;
     pend = length(in)-WLen;
-    %----- transience analysis -----
+    % For each window in the source audio...
     while pout<winCount
         grain = in(pin+1:pin+WLen).* w1;
         f = fft(grain);
+        % Calculate the magnitude of all non-mirrored FFT bins
         mag = abs(f(1:WLen/2));
 
+        % Calculate spectral flux analysis for the current window
         analysis(pout) = sqrt(sum((mag-mag1).^2))/(WLen/2);
-        %mag_diff = mag-mag1
-        %analysis(pout) = sum(mag_diff-abs(mag_diff)/2);
+
+        %%%%% Alternate method for calculating Spectral Flux... %%%%%
+        %
+        % mag_diff = mag-mag1
+        % analysis(pout) = sum(mag_diff-abs(mag_diff)/2);
+        %
+        %%%%%
+
+        % Store magnitude of current frame for use in the next frame
         mag1 = mag;
 
+        % Increment read and write pointers
         pin  = pin + hopSize;
         pout = pout + 1;
     end
@@ -223,4 +235,6 @@ function analysis = normaliseAnalysis(analysis, delta)
     %audio.
     thresh = medfilt1(analysis, 1000);
 
+    % Subtract low frequency content to flatten analysis, leaving relevant
+    % peaks for onset/transience detection
     analysis = analysis - (delta+thresh);
