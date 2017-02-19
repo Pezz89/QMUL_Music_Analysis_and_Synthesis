@@ -16,7 +16,8 @@ def main():
     n1 = s1['n1'][0]
 
 
-    plt.plot(((np.arange(win_count)*n1)[:-24])+WLen/2,analysis)
+    pdb.set_trace()
+    plt.plot(((np.arange(win_count)*n1)[:-84])+WLen/2,analysis)
     for i in transience_s:
         plt.axvline(i, color='r', linestyle='--')
     for i in transience_e:
