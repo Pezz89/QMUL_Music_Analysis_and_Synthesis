@@ -59,33 +59,33 @@ function timeStretch(fileName, ratio)
 
     % Normalize analysis
     analysis = analysis - mean(analysis);
-    analysis = analysis / max(analysis);
-    
-    analysis = analysis - filter(ones(1, 50)/50, 1, analysis); 
+    analysis = analysis / max(abs(std(analysis)));
+
+    analysis = filter(ones(1, 40)/40, 1, analysis);
+    analysis = analysis(25:end);
+    %analysis = fa - analysis;
+    %fa(fa < 0) = 0
+    %findpeaks(fa)
 
 
 
-    % TODO: Absolute values seems odd and possibly wrong... check this...
-    thresh = zeros(length(analysis)-4, 1);
-    for i = 3:length(analysis)-2
-        thresh(i-2) = median( ...
-            [analysis(i), ...
-            analysis(i-1),...
-            analysis(i-2)]...
-        );
-    end
-    delta = 0.05;
-    lambda = 0.0;
+    delta = 0.2;
+    thresh = medfilt1(analysis, 1000);
+    % thresh = zeros(length(analysis)-4, 1);
+    % for i = 3:length(analysis)-2
+    %     thresh(i-2) = delta + median( ...
+    %         [analysis(i), ...
+    %         analysis(i-1),...
+    %         analysis(i-2),...
+    %         analysis(i+1),...
+    %         analysis(i+2)]...
+    %     );
+    % end
+    analysis = analysis - (delta+thresh)
+    %[b,a] = butter(16, 0.001, 'high')
+    %analysis = filter(b, a, analysis)
 
-    a = zeros(length(thresh),1);
-    a(i) = analysis(1) > thresh(1);
-    for i = 3:length(thresh)
-        if a(i-2) == true
-            a(i-1) = analysis(i) > delta - lambda * thresh(i-2);
-        else
-            a(i-1) = analysis(i) > delta + lambda * thresh(i-2);
-        end
-    end
+    a = double(analysis > delta);
 
     if(false)
         figure
@@ -106,6 +106,7 @@ function timeStretch(fileName, ratio)
     % Convert window index to samples
     % TODO: Check sample accuracy of this...
     transience_s = t_s * n1;
+    transience_s = transience_s - 44100 * 0.05
     transience_e = t_e * n1;
 
     % Export variables to mat file for plotting in Python
@@ -125,7 +126,7 @@ function timeStretch(fileName, ratio)
 
 function timeStretchStable(in, FS,  stable, ratio)
     %----- time stretching initializations -----
-    n2           = 512; % analysis step [samples]
+    n2           = 256; % analysis step [samples]
     n1           = round(n2 / ratio); % synthesis step [samples]
     WLen         = 2048; % Window length
     w1           = hanning(WLen); % Hanning window of length WLen
@@ -140,26 +141,14 @@ function timeStretchStable(in, FS,  stable, ratio)
 
     tic
     %UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
-    % TODO: These cannot stay initialized like this.
-    pin  = -n1;
-    pout = -n1;
+    pin  = 0;
+    pout = 0;
     pend = length(in)-WLen;
 
     while pin<pend
-        if(any(pin >= stable(:, 1) & pin+WLen < stable(:, 2)))
-            pin  = pin + n1;
-            pout = pout + n2;
-        else
-            pin  = pin + n2;
-            pout = pout + n2;
-        end
-        if(pin>=pend)
-            break;
-        end
-
         grain = in(pin+1:pin+WLen).* w1;
 
-        if(any(pin >= stable(:, 1) & pin+WLen < stable(:, 2)))
+        if(any(pin+WLen/2 > stable(:, 1) & pin+WLen/2 < stable(:, 2)))
             %===========================================
             f     = fft(fftshift(grain));
             r     = abs(f);
@@ -173,7 +162,8 @@ function timeStretchStable(in, FS,  stable, ratio)
             % ===========================================
             out(pout+1:pout+WLen) = ...
                out(pout+1:pout+WLen) + grain;
-
+            pin  = pin + n1;
+            pout = pout + n2;
         else
             f     = fft(fftshift(grain));
             r     = abs(f);
@@ -184,7 +174,9 @@ function timeStretchStable(in, FS,  stable, ratio)
             ft    = (r.* exp(i*psi));
             grain = fftshift(real(ifft(ft))).*w2;
             out(pout+1:pout+WLen) = ...
-               out(pout+1:pout+WLen) + grain;%/tstretch_ratio;
+               out(pout+1:pout+WLen) + grain/tstretch_ratio;
+            pin  = pin + n1;
+            pout = pout + n1;
         end
     end
     %UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
@@ -196,7 +188,7 @@ function timeStretchStable(in, FS,  stable, ratio)
     % soundsc(out, FS);
     outName = ['./out' sprintf('%3.1f', ratio) '.wav'];
     wavwrite(out, FS, outName);
-    system(['play --silent ' outName]);
+    system(['open ' outName]);
 
 function [stable, ratio] = getStable(in, transience_s, transience_e)
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -219,6 +211,6 @@ function [stable, ratio] = getStable(in, transience_s, transience_e)
         transience_e = [0; transience_e];
         transience_s = [transience_s; L];
     end
-    stable = horzcat(transience_e, transience_s)
-    stable(:, 2) - stable(:, 1)
-    ratio = sum(stable(:, 2) - stable(:, 1)) / L
+    stable = horzcat(transience_e, transience_s);
+    stable(:, 2) - stable(:, 1);
+    ratio = sum(stable(:, 2) - stable(:, 1)) / L;
