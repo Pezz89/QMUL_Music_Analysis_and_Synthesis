@@ -12,12 +12,12 @@ def main():
     transience_s = s1['transience_s'][0]
     transience_e = s1['transience_e'][0]
     WLen = s1['WLen'][0]
-    win_count = s1['win_count'][0]
+    win_count = int(s1['win_count'][0])
     n1 = s1['n1'][0]
+    filterN1 = s1['filterN1'][0][0]
 
 
-    pdb.set_trace()
-    plt.plot(((np.arange(win_count)*n1)[:-84])+WLen/2,analysis)
+    plt.plot(((np.arange(win_count)*n1))+WLen/2,analysis)
     for i in transience_s:
         plt.axvline(i, color='r', linestyle='--')
     for i in transience_e:
