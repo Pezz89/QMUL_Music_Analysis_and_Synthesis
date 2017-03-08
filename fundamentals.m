@@ -3,22 +3,25 @@ function [f0 B] = fundamentals(audioFile, transcriptionMatrix)
     % Inputs:
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    stretchRatio = stretchRatio / stableRatio;
     % analysis step [samples]
-    n2 = 256;
+    n1 = 256;
     % synthesis step [samples]
-    n1 = round(n2 / stretchRatio);
+    n2 = n1;
     % Window length
     WLen = 2048;
     % Hanning window of length WLen
     w1 = hanning(WLen);
-    % Calculate ratio between analysis and synthesis hop size as the stretch
-    % ratio
-    tstretch_ratio = n2/n1;
 
-    % Allocate memory for output samples
-    out = zeros(WLen+ceil(length(in)*(1-stableRatio)) + WLen*2+ceil(length(in)*stableRatio*stretchRatio),1);
-    length(out)
+    [in, fs] = wavread(audioFile);
+    %----- initialize windows, arrays, etc -----
+    window = hanning(WLen, 'periodic'); % input window
+    nChannel = WLen/2;
+    L = length(in);
+    % Convert to mono
+    in = (in(:, 1)*.5)+(in(:, 2)*.5);
+    in = [zeros(WLen, 1); in; ...
+    zeros(WLen-mod(L,n1),1)] / max(abs(in));
+
     % Initialize memory for phase vocoder variables
     omega    = 2*pi*n1*[0:WLen-1]'/WLen;
     phi0     = zeros(WLen,1);
@@ -46,10 +49,3 @@ function [f0 B] = fundamentals(audioFile, transcriptionMatrix)
         pin  = pin + n1;
         pout = pout + n2;
     end
-
-    % Normalise output
-    out = out(WLen+1:length(out))/max(abs(out));
-    % Write audio out and open in the deafult system application
-    outName = ['./out' sprintf('%3.1f', stretchRatio) '.wav'];
-    wavwrite(out, FS, outName);
-    %system(['open ' outName]);
