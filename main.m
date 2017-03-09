@@ -5,4 +5,7 @@ function main()
     f = load('./media/notes.mat');
     transcriptionMatrix = f.notes
 
-    [f0 B] = fundamentals(wav1FileName, transcriptionMatrix)
+    [in, fs] = wavread(audioFile);
+    [FFTidx, Fp_est, Fp_corr] = find_pitch_fft(in, blackmanharris(4096), 4096, fs, 4096/2, 20.0, 20000.0, -20.0)
+
+    % [f0 B] = fundamentals(wav1FileName, transcriptionMatrix)

@@ -43,9 +43,10 @@ function [f0 B] = fundamentals(audioFile, transcriptionMatrix)
         phi   = angle(f);
         delta_phi= omega + princarg(phi-phi0-omega);
         phi0  = phi;
-        fi = (1/(2*pi))*(delta_phi/n1)*fs;
+        fi = (delta_phi/(2*pi*n1*fs));
         % ===========================================
         % Increament read and write pointers by hope sizes
         pin  = pin + n1;
         pout = pout + n2;
     end
+    fi
