@@ -1,4 +1,17 @@
 function [peaks, locs] = filterHarmonicMultiples(peaks, locs)
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % Remove all peaks that are found to be multiples of the most significant
+    % peaks partials.
+    %
+    % Inputs:
+    %  peaks: A matrix of peak frequencies
+    %  locs: The locations of the peaks in the magnitude spectrum
+    % Outputs:
+    %  peaks: A filtered matrix of peak frequencies, containing only peaks that
+    %  were not calculated to be multiples of others.
+    %  locs: The locations of the peaks in the magnitude spectrum
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %
     if ~isempty(peaks)
         mask = true(length(peaks), 1);
 

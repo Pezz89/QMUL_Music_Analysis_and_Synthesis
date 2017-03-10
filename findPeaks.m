@@ -9,6 +9,7 @@ function [freqs, inds] = findPeaks(X, frequencyPerBin)
     %  freqs: A matrix of frequencies for each found peak
     %  inds: FFT indexes of found peaks
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
     % Find the maximum value in the spectrum
     Xmax = max(X);
     % Create an adaptive threhold using a moving mean and moving standard

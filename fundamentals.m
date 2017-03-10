@@ -2,6 +2,9 @@ function [f0 B] = fundamentals(audioFile, transcriptionMatrix)
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % This program estimates the fundamental frequency of notes in a
     % harpsichord recording, given an audio file path as input.
+    % Based on transcription approach in  (Dixon, Mauch and Tidhar, 2011)
+    % "Estimation of harpsichord inharmonicity and temperament from musical
+    % recordings"
     %
     % Inputs:
     %   audioFile: Input harpsichord audio file path
@@ -52,41 +55,62 @@ function [f0 B] = fundamentals(audioFile, transcriptionMatrix)
         i = 1;
         % For each peak found...
         while i < length(peaks)
-
+            % Get the current peak's index in the spectrum
             binInd = locs(i);
+            % Calculate variables for quadratic interpolation
             ap1 = X(binInd+1);
             am1 = X(binInd-1);
             a = X(binInd);
+            % Interpolate peaks to refine peak frequency
             delta = 0.5*(am1 - ap1)/(2*(am1 - 2*a + ap1));
             peaks(i) = (binInd+delta) * binFreq;
             i = i + 1;
         end
-        % "Conservative transcription" harmonic filtering.
+        % Apply "Conservative transcription" harmonic filtering to remove
+        % multiples of peaks assumed to be f0s
         [peaks, locs] = filterHarmonicMultiples(peaks, locs);
 
+        % Store peaks with previously calculated peaks
         allPeaks = [allPeaks, peaks];
+        % Increment read pointer
         pin = pin + hop;
     end
 
 
     % Define nominal pitch
     fst = 415;
+    % Calculate distance in cents between the nominal pitch and all found peaks
     cent_diff = abs(1200 * log2 (allPeaks ./ fst));
+    % Calculate the average frequency of peaks that are within a semi tone of
+    % the nominal pitch
     fst = median(allPeaks(cent_diff < 50));
+    % Generate a range of pitches for midi notes based on the calculated
+    % nominal pitch. This equation was adapted from: https://www.midikits.net/midi_analyser/midi_note_frequency.htm<Paste>
+    % Analysed notes range from MIDI note 36 (C2) to 80 (G#5) as per the Dixon
+    % et. al paper
     pitchRange = -33:11;
     f = 2.^(pitchRange/12).*fst;
 
+    % Find all peaks that are within a semi tone of each midi note, and
+    % calculate their average to generate the estimation of frequency
     i = 1;
+    % Allocate empty matrix for each note
     freq = zeros(length(f), 1);
     while i < length(f)
         cent_diff = abs(1200 * log2 (allPeaks / f(i)));
+        % If no peaks can be found within the range, the note is zerod
         if ~any(cent_diff)
             freq(i) = 0;
         end
+        % Calculate the median, as above...
         freq(i) = median(allPeaks(cent_diff < 50));
         i = i + 1;
     end
+    % Fill all notes that are not analysed with zeros to create the final
+    % matrix
     f0 = [zeros(35, 1); freq; zeros(47, 1)];
 
+    % Due to time constraints, it was not possible to implement the
+    % inharmonicity values
     B = [];
 end
