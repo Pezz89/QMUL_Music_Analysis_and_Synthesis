@@ -26,7 +26,21 @@ while pin < pend
     X = X(1:length(X)/2);
     [peaks, locs] = findPeaks(X, binFreq);
     peaks = peaks';
+
+    i = 1;
+    while i < length(peaks)
+        binInd = locs(i);
+        ap1 = log(X(binInd+1));
+        am1 = log(X(binInd-1));
+        a = log(X(binInd));
+        delta = 0.5*(am1 - ap1)/(2*(am1 - 2*a + ap1));
+        peaks(i) = (binInd+delta) * binFreq;
+        i = i + 1;
+    end
+
+
     [peaks, locs] = filterHarmonicMultiples(peaks, locs);
+
     peaks = peaks(1:min(length(peaks), 40));
     locs = locs(1:min(length(peaks), 40));
 
@@ -43,12 +57,7 @@ while pin < pend
         intFreq = zeros(length(f), 1);
         i = 1;
         while i < length(f)
-            binInd = locs(I(i));
-            ap1 = X(binInd+1);
-            am1 = X(binInd-1);
-            a = X(binInd);
-            delta = 0.5*(am1 - ap1)/(2*(am1 - 2*a + ap1));
-            intFreq(i) = (binInd+delta) * binFreq;
+            intFreq(i) = peaks(I(i));
             i = i + 1;
         end
         if ~isempty(intFreq)

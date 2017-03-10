@@ -22,6 +22,7 @@ function [peaks, locs] = filterHarmonicMultiples(peaks, locs)
 
             i = i + 1;
         end
+        keyboard
         peaks = peaks(mask);
         locs = locs(mask);
     end
