@@ -26,13 +26,13 @@ while pin < pend
     X = X(1:length(X)/2);
     [peaks, locs] = findPeaks(X, binFreq);
     peaks = peaks';
-    peaks = peaks(1:min(length(peaks), 40));
     [peaks, locs] = filterHarmonicMultiples(peaks, locs);
+    peaks = peaks(1:min(length(peaks), 40));
     locs = locs(1:min(length(peaks), 40));
 
     midPoint = (pin+Wlen/2)/FS;
 
-    notesInRange = midPoint > notes(:,1)-start_ind/FS & midPoint < notes(:,2)-start_ind/FS;
+    notesInRange = midPoint > notes(:,1) & midPoint < notes(:,2);
     currentNotes = notes(notesInRange,3);
 
     % Get midi note frequency
@@ -55,11 +55,11 @@ while pin < pend
             midiNoteFreqs(currentNotes) = midiNoteFreqs(currentNotes) + intFreq;
             midiNoteCounts(currentNotes) = midiNoteCounts(currentNotes) + 1;
         end
-        scatter(ones(length(intFreq), 1) * (pin * FS), intFreq, 'filled');
-        hold on;
+        %scatter(ones(length(intFreq), 1) * (pin * FS), intFreq, 'filled');
+        %hold on;
     end
 
-    axis tight;
+    %axis tight;
     pin = pin + hop;
 end
 
