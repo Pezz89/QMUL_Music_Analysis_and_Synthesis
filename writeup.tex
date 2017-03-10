@@ -75,5 +75,77 @@
 \author{Sam Perry - ec16039}
 
 \maketitle
+\section{Task Solution}
+The solution proposed is designed estimate the fundamental frequency of notes
+played by a harpsichord, regardless of it's tuning. To achieve this, a number
+of methods were employed for the extraction of fundamental frequencies and the
+subsequent estimation of MIDI note frequencies for each of the harpsichord's
+keys. The approach taken was based primarily around work by Dixon et.\ 
+al~\citeyearpar{Dixon2012}.
+This approach uses a quadratically interpolated FFT (QIFFT) for polyphonic
+frequency estimation, combined with a selection of post-processing and analysis
+techniques to produce an effective method for accurately estimating fundamental
+frequencies ($f_0$) in harpsichord recordings.
 
+\subsection{QIFFT based frequency extraction}
+In order to estimate the frequencies of a harpsichord recording's notes
+individually, the frequencies for notes played were extracted using a QIFFT
+algorithm, combined with an adaptive threshold for peak picking.
+This method is shown to be more accurate for harpsichord partial analysis than
+techniques such as the phase-vocoder based instantaneous frequency analysis, as
+discussed in~\parencite{Tidhar2010}. 
+To apply this method, an adaptive threshold was first applied to the magnitude
+spectrum. The threshold used combined moving mean and moving standard
+deviation filters:
+$$\lvert X(n,i) \rvert > \mu(n,i) + 0.5 \cdot \sigma(n,i).$$
+By removing all frequencies that lied below this threshold, local maxima formed
+by harmonic content could be separated from noise related peaks effectively. A
+static threshold at -25dB less than the global maximum value was set to remove
+any low level noise:
+$$\lvert X(n,i) \rvert > 10^{-2.5}\max_{u,v}\{\lvert X(u,v)\}.$$
+At this point local maxima could be picked for all points above the threshold
+to generate a set of harmonic peaks. This is shown in figure
+
+\subsection{Quadratic Interpolation}
+In order to gain a more accurate estimation than is possible within the limits
+of the FFT's bin frequencies, peaks were interpolated by fitting a quadratic
+parabola:
+$$\delta = \frac{a_{p-1}-a_{p+1}}{2(a_{p-1}-2a_p+a_{p+1}})$$.
+By taking the estimated peak and it's two neighbouring bin magnitudes, a
+more precise prediction is produced by fitting a parabolic function to these
+samples and calculating it's maxima. This helps to produce the high levels of
+accuracy needed for the distinction of subtle deviations in fundamental
+frequency.
+
+\subsection{Harmonic multiples filtering}
+As the QIFFT extraction method has no was of discerning between a fundamental
+partial and a harmonic, a method for removing some of the masking harmonics is
+presented by Dixon et. al~\citeyearpar{Dixon2012}. By calculating the 
+
+\section{Evaluation}
+Program assumes that peaks will be near
+why not use YIN
+\subsection{Other known bugs}
+\begin{itemize}
+    \item a
+\end{itemize}
+
+\subsection{Possible improvements}
+\begin{itemize}
+    \item a
+\end{itemize}
+
+\section{Figures}
+\begin{figure}[H]
+    \caption{Adaptive threshold (green) applied to magnitude spectrum to find
+    peaks (orange)}
+    \makebox[\textwidth]{\includegraphics[width=1.1\textwidth]{MeanStdPeaks}}
+    \label{MeanStdPeaks}
+\end{figure}
+\begin{figure}[H]
+    \caption{Picking local maxima across filtered magnitude spectrum}
+    \makebox[\textwidth]{\includegraphics[width=1.1\textwidth]{PeakPicking}}
+    \label{PeakPicking}
+\end{figure}
+\printbibliography
 \end{document}
