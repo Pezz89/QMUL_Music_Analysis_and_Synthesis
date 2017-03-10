@@ -27,6 +27,7 @@ while pin < pend
     [peaks, locs] = findPeaks(X, binFreq);
     peaks = peaks';
     peaks = peaks(1:min(length(peaks), 40));
+    [peaks, locs] = filterHarmonicMultiples(peaks, locs);
     locs = locs(1:min(length(peaks), 40));
 
     midPoint = (pin+Wlen/2)/FS;
@@ -54,10 +55,10 @@ while pin < pend
             midiNoteFreqs(currentNotes) = midiNoteFreqs(currentNotes) + intFreq;
             midiNoteCounts(currentNotes) = midiNoteCounts(currentNotes) + 1;
         end
+        scatter(ones(length(intFreq), 1) * (pin * FS), intFreq, 'filled');
+        hold on;
     end
 
-    scatter(ones(size(peaks)) .* (pin * FS), peaks, 15, linspace(1,0,length(peaks)), 'filled');
-    hold on;
     axis tight;
     pin = pin + hop;
 end
