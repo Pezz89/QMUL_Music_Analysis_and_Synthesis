@@ -70,9 +70,9 @@
    showstringspaces=false}
 
 \begin{document}
-\title{ECS731P - Music Analysis and Synthesis}
+\title{ECS731P --- Music Analysis and Synthesis}
 \subtitle{\LARGE{Assignment 2 Report}}
-\author{Sam Perry - ec16039}
+\author{Sam Perry --- EC16039}
 
 \maketitle
 \section{Task Solution}
@@ -117,23 +117,52 @@ samples and calculating it's maxima. This helps to produce the high levels of
 accuracy needed for the distinction of subtle deviations in fundamental
 frequency.
 
-\subsection{Harmonic multiples filtering}
-As the QIFFT extraction method has no was of discerning between a fundamental
+\subsection{Harmonic multiples filtering}\label{HMF}
+As the QIFFT extraction method has no way of discerning between a fundamental
 partial and a harmonic, a method for removing some of the masking harmonics is
-presented by Dixon et. al~\citeyearpar{Dixon2012}. By calculating the 
+presented by Dixon et. al~\citeyearpar{Dixon2012}. Harmonics are removed by
+iterating over harmonics ordered by their magnitude. Ratios are calculated in
+terms of cents between the current harmonic's multiples and the following
+harmonics frequency. If any harmonics are found to be within a set range (50
+cents) of a multiple of the $f_0$, it is removed. This helps reduce the
+interference of harmonics, at the cost of potential loss of future $f_0$.
+
+\subsection{Estimation of note frequencies}
+Having estimated $f_0$ values for all notes in a recording, the final stage is
+to classify partials as MIDI notes to produce the final vector. This was
+achieved by initially using a base nominal pitch for the harpsichord (set to
+415Hz). Partials were selected from a range of half a semitone (in a similar
+way to that of section~\ref{HMF} above or below this value. The median was then
+calculated to produce an estimate for this note. From this, estimates for all
+subsequent notes could be calculated in a similar manner, using the formula
+described in~\parencite{Scarff2017} to estimate the base pitch.
 
 \section{Evaluation}
-Program assumes that peaks will be near
-why not use YIN
-\subsection{Other known bugs}
-\begin{itemize}
-    \item a
-\end{itemize}
+It was decided that, given limited time, focus would be placed on implementing
+a robust proven algorithm over the design and extensive testing of a more
+experimental approach. This approach was chosen for it's proven accurate
+results and as such, is expected to perform to a reasonable standard, providing
+it's implementation is correct. The algorithm has been tested using the two
+sample audio files provided and produces a vector of frequency values that do
+not appear to be unexpected. Individual components such as parabolic
+interpolation appear to perform as expected and have been tested on small
+segments of audio files to verify the improvement in frequency estimation on
+monophonic notes. Harmonic removal was also tested through the use of
+fabricated peak value vectors to check that the correct values were removed as
+expected.\\
 
-\subsection{Possible improvements}
-\begin{itemize}
-    \item a
-\end{itemize}
+However, it is clear that further, more rigorous testing is required to verify
+that the algorithm is working as expected. The use of a larger test database
+would confirm the generalization of the algorithm, as well as potentially
+highlighting edge-cases that may have been missed. Most importantly the
+frequency values that have been computed should be inspected in greater detail.
+More thorough testing through use of known values would allow for the
+quantification of results that is currently lacking.\\
+
+Comparison with other methods such as the phase-vocoder implementation would
+provide an alternate system for comparison of results. It is also noted that
+the harmonicity estimation was not implemented. This would have provided a more
+interesting metric for analysing the confidence of estimations.
 
 \section{Figures}
 \begin{figure}[H]
@@ -147,5 +176,10 @@ why not use YIN
     \makebox[\textwidth]{\includegraphics[width=1.1\textwidth]{PeakPicking}}
     \label{PeakPicking}
 \end{figure}
+
+\section{Notes}
+Unfortunately Latex will not print the URL for the Scraff reference properly.
+The url is:
+\href{https://www.midikits.net/midi_analyser/midi_note_frequency.htm}{https://www.midikits.net/midi\_analyser/midi\_note\_frequency.htm}
 \printbibliography
 \end{document}
