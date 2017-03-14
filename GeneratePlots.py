@@ -24,8 +24,7 @@ def main():
         with af.AudioFile('./media/vibrato.wav', 'r') as a:
             b = a.read_frames()
         #plt.plot(np.linspace(0, len(s1['f0']), len(b)), b)
-        pdb.set_trace()
-        plt.plot(s)
+        plt.plot(s[0])
         #plt.plot(s1['rms'])
         #plt.plot(s1['sf'])
         plt.show()

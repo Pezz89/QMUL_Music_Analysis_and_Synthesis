@@ -22,7 +22,9 @@ function main()
     % Process audio...
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % Sum to mono
-    %x = sum(x,size(x,2))*0.5;
+    if size(x, 2) ~= 1
+        x = sum(x,size(x,2))*0.5;
+    end
     x = x';
 
     loopPoints(x, p);
