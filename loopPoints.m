@@ -32,16 +32,55 @@ function a = loopPoints(signal, p)
 
     % Set threshold initially at mix(feature) + 0.05 x min(feature) standard
     % deviation
-    f0thresh = min(f0std(silenceMask)) + 0.05 * min(f0std(silenceMask));
-    rmsthresh = min(rmsstd(silenceMask)) + 0.05 * min(rmsstd(silenceMask));
-    sfthresh = min(sfstd(silenceMask)) + 0.05 * min(sfstd(silenceMask));
-    % Find frames above thresholds for each feature
-    f0candidates = find(f0std < f0thresh);
-    rmscandidates = find(rmsstd < rmsthresh);
-    sfcandidates = find(sfstd < sfthresh)
+    sfInc = 0.05 * min(sfstd(silenceMask));
+    rmsInc = 0.05 * min(rmsstd(silenceMask));
+    f0Inc = 0.05 * min(f0std(silenceMask));
+    f0thresh = min(f0std(silenceMask));
+    rmsthresh = min(rmsstd(silenceMask));
+    sfthresh = min(sfstd(silenceMask));
+    loopFound = false;
+
+    while ~loopFound
+        f0thresh = f0thresh + f0Inc;
+        rmsthresh = rmsthresh + rmsInc;
+        sfthresh = sfthresh + sfInc;
+        % Find frames above thresholds for each feature
+        f0candidates = find(f0std < f0thresh);
+        rmscandidates = find(rmsstd < rmsthresh);
+        sfcandidates = find(sfstd < sfthresh);
+
+        f0CDiff = diff(f0candidates) == 1
+        if isempty(f0CDiff)
+            continue;
+        end
+
+        % Code adapted from https://uk.mathworks.com/matlabcentral/newsreader/view_thread/151318
+        krn=[1 -1];
+        changes=conv(krn, f0CDiff);
+
+        % Calculate start and end window indexes of transient segments
+        t_s = f0candidates(changes==1);
+        t_e = f0candidates(changes==-1);
+
+        f0MeanSeg = [];
+        % Get mean f0 for each segment
+        for i=1:length(t_s)
+            f0MeanSeg = [f0MeanSeg, mean(f0(t_s(i):t_e(i)))];
+        end
+        % if segment is longer than the minimum number of periods at the
+        % segment's mean f0 size, return it's start point's next zero crossing
+        % and the integer multiple of the period closest to it's endpoint
 
 
-    keyboard
+        if any(f0MeanSeg)
+            keyboard
+        end
+
+        % Convert window index to samples
+        %transience_s = t_s * hopSize;
+        %transience_e = t_e * hopSize;
+    end
+
 
     % Calculate start and end times for segments of consecutive frames
     % Calculate the lengths of the start and end times
