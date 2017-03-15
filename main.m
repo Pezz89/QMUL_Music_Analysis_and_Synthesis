@@ -2,7 +2,7 @@ function main()
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % User settings
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    audioFile = './media/vibrato.wav';
+    audioFile = './media/sviolin.aiff';
     %Load audiofile
     [x, FS] = audioread(audioFile);
 
@@ -12,7 +12,7 @@ function main()
     p.f0min=50;
     % Set f0 and RMS window and hop sizes
     p.wsize = 2048;
-    p.hop = round(p.wsize);
+    p.hop = round(p.wsize*0.5);
 
     % Set F0 harmonicity threshold
     p.fDelta = 0;
@@ -21,7 +21,7 @@ function main()
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % Process audio...
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % Sum to mono
+    % Sum to mono if necessary
     if size(x, 2) ~= 1
         x = sum(x,size(x,2))*0.5;
     end

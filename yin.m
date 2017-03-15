@@ -1,4 +1,4 @@
-function pitch = yinDAFX(x,p)
+function pitch = yin(x,p)
     % function pitch = yinDAFX(x,fs,f0min,hop)
     % Author: Adrian v.d. Knesebeck
     % determines the pitches of the input signal x at a given hop size
