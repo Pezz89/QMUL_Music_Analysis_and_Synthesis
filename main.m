@@ -2,7 +2,7 @@ function main()
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % User settings
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    audioFile = './media/sviolin.aiff';
+    audioFile = './media/sguitar.aiff';
     %Load audiofile
     [x, FS] = audioread(audioFile);
 
