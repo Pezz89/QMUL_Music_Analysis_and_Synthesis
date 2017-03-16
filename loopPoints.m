@@ -94,7 +94,7 @@ function loopInds = loopPoints(signal, p)
         viableSegs = (((1./f0AvrSeg)*p.FS)*minNoPeriods) < segLength;
         if any(viableSegs)
             segLength(~viableSegs) = 0;
-            [~, ind] = max(segLength);
+            [~, ind] = min(segLength);
             finalStart = segStart(ind);
             finalEnd = segEnd(ind);
             finalMF0 = f0AvrSeg(ind);
@@ -132,6 +132,7 @@ function loopInds = loopPoints(signal, p)
     [~, idx] = min(tmp); %index of closest value
     finalEnd = finalEnd-halfWindow+zeroX(idx);
 
+    keyboard
     loopInds = [round(finalStart), round(finalEnd)];
 
     % Calculate start and end times for segments of consecutive frames

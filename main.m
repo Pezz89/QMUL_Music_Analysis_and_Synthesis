@@ -17,10 +17,10 @@ function main()
     % Set F0 harmonicity threshold
     p.fDelta = 0;
 
-    p.minPeriod = 50;
+    p.minPeriod = 25;
 
     % Plot results using python script
-    p.pyplot = false;
+    p.pyplot = true;
 
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -40,7 +40,7 @@ function main()
         save('./loopInds.mat', '-struct', 's');
     end
 
-    y = loop(x, length(x) * 1.5, loopInds);
+    y = loop(x, length(x) * 1.5, loopInds, p);
     audiowrite('./out.wav', y, p.FS);
 end
 
