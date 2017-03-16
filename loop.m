@@ -1,4 +1,6 @@
 function y = loop(signal, duration, loopPoints, p)
+    % Set crossfade size
+    crossFade = round(0.05*p.FS)
     % Get loop start and end points
     loopStart = loopPoints(1);
     loopEnd = loopPoints(2);
@@ -15,6 +17,7 @@ function y = loop(signal, duration, loopPoints, p)
     loopCount = floor(durationDiff / loopLength);
 
     y = signal(1:loopStart);
+    y(end-crossFade:end) = y(end-crossFade:end) * linspace(1, 0, crossfade)
 
     figure
     plot(signal(loopStart-40:loopEnd+40))
