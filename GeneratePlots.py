@@ -32,7 +32,6 @@ def main():
         plt.plot(s)
         s = np.array(s1['f0'][0], dtype=float)
         plt.plot(s)
-        pdb.set_trace()
         #plt.savefig('Segmentation.png')
 
         s1 = io.loadmat("./loopInds.mat")

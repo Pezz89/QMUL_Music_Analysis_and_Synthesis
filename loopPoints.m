@@ -6,14 +6,18 @@ function loopInds = loopPoints(signal, p)
     % Calculate transience of frames
     sf = spectralFlux(signal, p);
 
-    s.sf = sf;
-    s.rms = rms';
-    s.f0 = f0Trans;
-    save('./analysis.mat', '-struct', 's');
+    if p.pyplot
+        s.sf = sf;
+        s.rms = rms';
+        s.f0 = f0;
+        save('./analysis.mat', '-struct', 's');
+        [status,cmdout] = system('./GeneratePlots.py');
+    end
 
+    if ~isfield(p, 'minPeriod'); p.minPeriod=350; end
     % Find frames where the standard deviation of f0, spectral flux and energy is below a
     % certain threshold.
-    minNoPeriods = 340;
+    minNoPeriods = p.minPeriod;
 
     % Consider only frames that are less than 25dB less than the maximum RMS
     % frame
@@ -27,10 +31,13 @@ function loopInds = loopPoints(signal, p)
     sfstd = movstd(sf, 9);
     rmsstd = movstd(rms, 9);
     f0Transstd = movstd(f0Trans, 9);
-    s.sf = sfstd;
-    s.rms = rmsstd';
-    s.f0 = f0Transstd;
-    save('./analysis.mat', '-struct', 's');
+    if p.pyplot
+        s.sf = sfstd;
+        s.rms = rmsstd';
+        s.f0 = f0Transstd;
+        save('./analysis.mat', '-struct', 's');
+        [status,cmdout] = system('./GeneratePlots.py');
+    end
     % Inharmonic frames are set to the maximum standard deviation +10% as they
     % are most likely to be worse for looping than harmonic frames
     f0Transstd(inharmonicMask) = max(f0Transstd) + max(f0Transstd)*0.1;
@@ -71,10 +78,10 @@ function loopInds = loopPoints(signal, p)
         t_s = f0TransCandidates(changes==1);
         t_e = f0TransCandidates(changes==-1);
 
-        f0MeanSeg = [];
+        f0AvrSeg = [];
         % Get mean f0Trans for each segment
         for i=1:length(t_s)
-            f0MeanSeg = [f0MeanSeg, mean(f0(t_s(i):t_e(i)))];
+            f0AvrSeg = [f0AvrSeg, median(f0(t_s(i):t_e(i)))];
         end
         % if segment is longer than the minimum number of periods at the
         % segment's mean f0 size, return it's start point's next zero crossing
@@ -84,12 +91,13 @@ function loopInds = loopPoints(signal, p)
         segStart = (t_s * p.hop) + round(p.wsize/2);
         segEnd = (t_e * p.hop) + round(p.wsize/2);
         segLength = segEnd - segStart;
-        viableSegs = ((1./f0MeanSeg)*minNoPeriods) < segLength/p.FS;
+        viableSegs = (((1./f0AvrSeg)*p.FS)*minNoPeriods) < segLength;
         if any(viableSegs)
             [~, ind] = max(segLength(viableSegs));
             finalStart = segStart(ind);
             finalEnd = segEnd(ind);
-            finalMF0 = f0MeanSeg(ind);
+            finalMF0 = f0AvrSeg(ind);
+            finalLength = segLength(ind);
             loopFound = true;
         end
     end
@@ -105,17 +113,15 @@ function loopInds = loopPoints(signal, p)
 
     tmp = abs(zeroX-halfWindow);
     [~, idx] = min(tmp); %index of closest value
-    finalStart = finalStart-halfWindow+zeroX(idx);
     % Find the nearest sample index to the end index that is an integer multiple of the mean f0
     % period
     finalPeriod = (1./finalMF0);
     % Calculate the final period in samples
     finalPFS = finalPeriod*p.FS;
 
-    % Calculate the length of the loop
-    finalLength = finalEnd - finalStart;
     % Calculate index of the nearest multiple to the fundamental period
     finalEnd = floor(finalLength/finalPFS)*(finalPFS)+finalStart;
+    finalStart = finalStart-halfWindow+zeroX(idx);
     % Find the nearest zero crossing to the index found
     x = signal(finalEnd-halfWindow:finalEnd+halfWindow-1);
     signum = sign(x);    % get sign of data

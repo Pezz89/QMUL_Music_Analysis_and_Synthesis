@@ -17,6 +17,11 @@ function main()
     % Set F0 harmonicity threshold
     p.fDelta = 0;
 
+    p.minPeriod = 100;
+
+    % Plot results using python script
+    p.pyplot = false;
+
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % Process audio...
@@ -27,9 +32,15 @@ function main()
     end
     x = x';
 
+    % Calculate start and end indexes in samples for loop
     loopInds = loopPoints(x, p);
 
-    s.loopInds = loopInds;
-    save('./loopInds.mat', '-struct', 's');
+    if p.pyplot
+        s.loopInds = loopInds;
+        save('./loopInds.mat', '-struct', 's');
+    end
+
+    y = loop(x, length(x) * 1.5, loopInds);
+    audiowrite('./out.wav', y, p.FS);
 end
 
