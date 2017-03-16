@@ -1,11 +1,12 @@
-function f0 = calcF0(x, p)
+function [f0, f0Trans] = calcF0(x, p)
     if ~isfield(p, 'fDelta'); error('fDelta not provided to calcF0'); end
     % Calculate f0 of signal frames filtered by inharmonicity
     f = yin(x, p);
+    f0 = f;
 
     % Apply further processing only to values that are harmonic. Avoids divide
     % by zero error
-    f0 = zeros(size(f));
+    f0Trans = zeros(size(f));
     mask = f > 0;
     % Map to semi-tone pitch spectrum
     f(mask) = 12*log2(f(mask)/440.0)+69.0;
@@ -14,4 +15,4 @@ function f0 = calcF0(x, p)
     f = f - (median(f(mask))+6);
 
     % Wrap octaves to remove octave error
-    f0(mask) = mod(f(mask), 12);
+    f0Trans(mask) = mod(f(mask), 12);
