@@ -27,6 +27,9 @@ function main()
     end
     x = x';
 
-    loopPoints(x, p);
+    loopInds = loopPoints(x, p);
+
+    s.loopInds = loopInds;
+    save('./loopInds.mat', '-struct', 's');
 end
 

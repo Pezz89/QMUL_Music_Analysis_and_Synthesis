@@ -9,7 +9,8 @@ import pdb
 def main():
     if True:
         dpi = 100
-        fig = plt.figure(figsize=(1707/dpi, (846)/dpi), dpi=dpi)
+        #fig = plt.figure(figsize=(1707/dpi, (846)/dpi), dpi=dpi)
+        fig = plt.figure()
         s1 = io.loadmat("./analysis.mat")
         plt.legend(
             loc='upper center',
@@ -21,17 +22,25 @@ def main():
         s = np.array(s1['f0'], dtype=float)
         s[s == 0] = np.nan
         #plt.plot(np.mod(12*np.log2(s/440.0)+69.0, 12))
-        with af.AudioFile('./media/vibrato.wav', 'r') as a:
+        with af.AudioFile('./media/sguitar.aiff', 'r') as a:
             b = a.read_frames()
-        #plt.plot(np.linspace(0, len(s1['f0']), len(b)), b)
-        pdb.set_trace()
+        x = np.linspace(0, len(s1['rms']), len(b))
+        plt.plot(x, b)
         s = np.array(s1['rms'], dtype=float)
         plt.plot(s)
-        #plt.plot(s1['rms'])
-        #plt.plot(s1['sf'])
-        plt.show()
+        s = np.array(s1['sf'], dtype=float)
+        plt.plot(s)
+        s = np.array(s1['f0'][0], dtype=float)
+        plt.plot(s)
+        pdb.set_trace()
         #plt.savefig('Segmentation.png')
 
+        s1 = io.loadmat("./loopInds.mat")
+        s = np.array(s1['loopInds'][0], dtype=int)
+        plt.axvline(x[s[0]], color='r', linestyle='--')
+        plt.axvline(x[s[1]], color='b', linestyle='--')
+
+        plt.show()
 
     if False:
         dpi = 100

@@ -1,4 +1,4 @@
-function a = loopPoints(signal, p)
+function loopInds = loopPoints(signal, p)
     % Calculate fundamental frequencies above a set inharmonicity threshold
     [f0, f0Trans] = calcF0(signal, p);
     % Calculate energy of frames
@@ -13,26 +13,29 @@ function a = loopPoints(signal, p)
 
     % Find frames where the standard deviation of f0, spectral flux and energy is below a
     % certain threshold.
-    minNoPeriods = 10;
+    minNoPeriods = 340;
 
     % Consider only frames that are less than 25dB less than the maximum RMS
     % frame
     silenceThresh = 10^-2.5*max(rms);
+    %silenceMask = rms > silenceThresh;
     silenceMask = rms > silenceThresh;
     inharmonicMask = f0Trans == 0;
 
     % Calculate the standard deviation of consecutive frames to measure the
     % spread of values over time
-    sfstd = movstd(sf, 3);
-    rmsstd = movstd(rms, 3);
-    f0Transstd = movstd(f0Trans, 3);
+    sfstd = movstd(sf, 9);
+    rmsstd = movstd(rms, 9);
+    f0Transstd = movstd(f0Trans, 9);
+    s.sf = sfstd;
+    s.rms = rmsstd';
+    s.f0 = f0Transstd;
+    save('./analysis.mat', '-struct', 's');
     % Inharmonic frames are set to the maximum standard deviation +10% as they
     % are most likely to be worse for looping than harmonic frames
     f0Transstd(inharmonicMask) = max(f0Transstd) + max(f0Transstd)*0.1;
 
-    % Set threshold initially at mix(feature) + 0.05 x min(feature) standard
-    % deviation
-    p.thresholdInc = 0.1
+    p.thresholdInc = 0.0001;
     sfInc = p.thresholdInc * (max(sfstd(silenceMask)) - min(sfstd(silenceMask)));
     rmsInc = p.thresholdInc * (max(rmsstd(silenceMask)) - min(rmsstd(silenceMask)));
     f0TransInc = p.thresholdInc * (max(f0Transstd(silenceMask)) - min(f0Transstd(silenceMask)));
@@ -45,6 +48,10 @@ function a = loopPoints(signal, p)
         f0Transthresh = f0Transthresh + f0TransInc;
         rmsthresh = rmsthresh + rmsInc;
         sfthresh = sfthresh + sfInc;
+        if f0Transthresh > max(f0Transstd)*1.4 || rmsthresh > max(rmsstd)*1.4 || ...
+            sfthresh > max(sfstd)*1.4
+            error('No segments found, try lowering the minimum period count or increment rate');
+        end
         % Find frames below thresholds for each feature
         f0TransCandidates = find(f0Transstd < f0Transthresh);
         rmscandidates = find(rmsstd < rmsthresh);
@@ -77,29 +84,49 @@ function a = loopPoints(signal, p)
         segStart = (t_s * p.hop) + round(p.wsize/2);
         segEnd = (t_e * p.hop) + round(p.wsize/2);
         segLength = segEnd - segStart;
-        segLength/p.FS
-        viableSegs = ((1./f0MeanSeg)*minNoPeriods) < segLength/p.FS
+        viableSegs = ((1./f0MeanSeg)*minNoPeriods) < segLength/p.FS;
         if any(viableSegs)
             [~, ind] = max(segLength(viableSegs));
             finalStart = segStart(ind);
             finalEnd = segEnd(ind);
-            finalMF0 = f0MeanSeg(ind)
+            finalMF0 = f0MeanSeg(ind);
             loopFound = true;
         end
     end
 
+    % Refine start and end points based on zero-crossings
+    % Find the nearest zero crossing to the middle of the start point's window
     % Code adapted from: https://uk.mathworks.com/matlabcentral/newsreader/view_thread/48430
-    halfWindow = round(p.wsize/2)
-    x = signal(finalStart-halfWindow:finalStart+halfWindow-1)
+    halfWindow = round(p.wsize/2);
+    x = signal(finalStart-halfWindow:finalStart+halfWindow-1);
     signum = sign(x);    % get sign of data
     signum(x==0) = 1;   % set sign of exact data zeros to positiv
-    zeroX = find(diff(signum)~=0)  % get zero crossings by diff ~= 0
+    zeroX = find(diff(signum)~=0);  % get zero crossings by diff ~= 0
 
     tmp = abs(zeroX-halfWindow);
     [~, idx] = min(tmp); %index of closest value
-    keyboard
     finalStart = finalStart-halfWindow+zeroX(idx);
-    keyboard
+    % Find the nearest sample index to the end index that is an integer multiple of the mean f0
+    % period
+    finalPeriod = (1./finalMF0);
+    % Calculate the final period in samples
+    finalPFS = finalPeriod*p.FS;
+
+    % Calculate the length of the loop
+    finalLength = finalEnd - finalStart;
+    % Calculate index of the nearest multiple to the fundamental period
+    finalEnd = floor(finalLength/finalPFS)*(finalPFS)+finalStart;
+    % Find the nearest zero crossing to the index found
+    x = signal(finalEnd-halfWindow:finalEnd+halfWindow-1);
+    signum = sign(x);    % get sign of data
+    signum(x==0) = 1;   % set sign of exact data zeros to positiv
+    zeroX = find(diff(signum)~=0);  % get zero crossings by diff ~= 0
+
+    tmp = abs(zeroX-halfWindow);
+    [~, idx] = min(tmp); %index of closest value
+    finalEnd = finalEnd-halfWindow+zeroX(idx);
+
+    loopInds = [finalStart, finalEnd];
 
     % Calculate start and end times for segments of consecutive frames
     % Calculate the lengths of the start and end times
