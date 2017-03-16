@@ -93,7 +93,8 @@ function loopInds = loopPoints(signal, p)
         segLength = segEnd - segStart;
         viableSegs = (((1./f0AvrSeg)*p.FS)*minNoPeriods) < segLength;
         if any(viableSegs)
-            [~, ind] = max(segLength(viableSegs));
+            segLength(~viableSegs) = 0;
+            [~, ind] = max(segLength);
             finalStart = segStart(ind);
             finalEnd = segEnd(ind);
             finalMF0 = f0AvrSeg(ind);
@@ -113,15 +114,14 @@ function loopInds = loopPoints(signal, p)
 
     tmp = abs(zeroX-halfWindow);
     [~, idx] = min(tmp); %index of closest value
+    finalStart = finalStart-halfWindow+zeroX(idx);
     % Find the nearest sample index to the end index that is an integer multiple of the mean f0
     % period
-    finalPeriod = (1./finalMF0);
     % Calculate the final period in samples
-    finalPFS = finalPeriod*p.FS;
+    finalPeriod = (1./finalMF0)*p.FS;
 
     % Calculate index of the nearest multiple to the fundamental period
-    finalEnd = floor(finalLength/finalPFS)*(finalPFS)+finalStart;
-    finalStart = finalStart-halfWindow+zeroX(idx);
+    finalEnd = floor(finalLength/finalPeriod)*(finalPeriod)+finalStart;
     % Find the nearest zero crossing to the index found
     x = signal(finalEnd-halfWindow:finalEnd+halfWindow-1);
     signum = sign(x);    % get sign of data
@@ -132,7 +132,7 @@ function loopInds = loopPoints(signal, p)
     [~, idx] = min(tmp); %index of closest value
     finalEnd = finalEnd-halfWindow+zeroX(idx);
 
-    loopInds = [finalStart, finalEnd];
+    loopInds = [round(finalStart), round(finalEnd)];
 
     % Calculate start and end times for segments of consecutive frames
     % Calculate the lengths of the start and end times

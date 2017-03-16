@@ -17,7 +17,7 @@ function main()
     % Set F0 harmonicity threshold
     p.fDelta = 0;
 
-    p.minPeriod = 100;
+    p.minPeriod = 20;
 
     % Plot results using python script
     p.pyplot = false;
