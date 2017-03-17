@@ -2,7 +2,7 @@ function main()
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % User settings
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    audioFile = './media/sguitar.aiff';
+    audioFile = './media/ssax.aiff';
     %Load audiofile
     [x, FS] = audioread(audioFile);
 
@@ -17,7 +17,7 @@ function main()
     % Set F0 harmonicity threshold
     p.fDelta = 0;
 
-    p.minPeriod = 5;
+    p.minPeriod = 25;
 
     % Plot results using python script
     p.pyplot = false;

@@ -28,9 +28,9 @@ function loopInds = loopPoints(signal, p)
 
     % Calculate the standard deviation of consecutive frames to measure the
     % spread of values over time
-    sfstd = movstd(sf, 9);
-    rmsstd = movstd(rms, 9);
-    f0Transstd = movstd(f0Trans, 9);
+    sfstd = movstd(sf, 3);
+    rmsstd = movstd(rms, 3);
+    f0Transstd = movstd(f0Trans, 3);
     if p.pyplot
         s.sf = sfstd;
         s.rms = rmsstd';
@@ -108,13 +108,13 @@ function loopInds = loopPoints(signal, p)
     end
 
     % Refine start and end points based on zero-crossings
-    % Find the nearest zero crossing to the middle of the start point's window
+    % Find the nearest positive zero crossing to the middle of the start point's window
     % Code adapted from: https://uk.mathworks.com/matlabcentral/newsreader/view_thread/48430
     halfWindow = round(p.wsize/2);
     x = signal(finalStart-halfWindow:finalStart+halfWindow-1);
     signum = sign(x);    % get sign of data
     signum(x==0) = 1;   % set sign of exact data zeros to positiv
-    zeroX = find(diff(signum)~=0);  % get zero crossings by diff ~= 0
+    zeroX = find(diff(signum)>0);  % get zero crossings by diff ~= 0
 
     tmp = abs(zeroX-halfWindow);
     [~, idx] = min(tmp); %index of closest value
@@ -130,7 +130,7 @@ function loopInds = loopPoints(signal, p)
     x = signal(finalEnd-halfWindow:finalEnd+halfWindow-1);
     signum = sign(x);    % get sign of data
     signum(x==0) = 1;   % set sign of exact data zeros to positiv
-    zeroX = find(diff(signum)~=0);  % get zero crossings by diff ~= 0
+    zeroX = find(diff(signum)>0);  % get zero crossings by diff ~= 0
 
     tmp = abs(zeroX-halfWindow);
     [~, idx] = min(tmp); %index of closest value
