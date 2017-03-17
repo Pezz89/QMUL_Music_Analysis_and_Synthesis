@@ -6,7 +6,7 @@ function y = loop(signal, duration, loopPoints, p)
     loopEnd = loopPoints(2);
     loopLength = loopEnd - loopStart;
     if crossFade > loopLength / 2
-        crossFade = floor(loopLength / 2);
+        crossFade = floor(loopLength / 2)-1;
     end
 
     if duration < signal
@@ -17,24 +17,23 @@ function y = loop(signal, duration, loopPoints, p)
     % duration
     durationDiff = duration - length(signal);
     % Calculate the number of times that the loop will fully fit into this
-    loopCount = floor(durationDiff / (loopLength-crossFade*2));
-    loopIncrement = (loopLength-(crossFade*2));
+    loopCount = floor(durationDiff / loopLength);
     y = zeros(1, duration);
 
-    fadeIn = sqrt(0.5*(1+linspace(-1, 1, crossFade)))
-    fadeOut = sqrt(0.5*(1-linspace(-1, 1, crossFade)))
-    y(1:loopStart+crossFade) = signal(1:loopStart+crossFade);
-    y(loopStart:loopStart+crossFade-1) = y(loopStart:loopStart+crossFade-1) .* fadeOut;
+    y(1:loopStart-1) = signal(1:loopStart-1);
 
-    figure
-    plot(signal(loopStart-40:loopEnd+40))
-    hold on
-    plot([zeros(1, 40), signal(loopStart:loopEnd-1), zeros(1, 41)])
+    if p.pyplot
+        figure
+        plot(signal(loopStart-40:loopEnd+40))
+        hold on
+        plot([zeros(1, 40), signal(loopStart:loopEnd-1), zeros(1, 41)])
+    end
+
     loop = signal(loopStart:loopEnd-1);
-    loop(1:crossFade) = loop(1:crossFade) .* fadeIn;
-    loop(end-crossFade+1:end) = loop(end-crossFade+1:end) .* fadeOut;
+    loop(1:crossFade) = loop(1:crossFade);% .* fadeIn;
+    loop(end-crossFade+1:end) = loop(end-crossFade+1:end);% .* fadeOut;
     for i=0:loopCount-1
-        y(loopStart+(loopIncrement*i):loopEnd-1+(loopIncrement*i))=y(loopStart+(loopIncrement*i):loopEnd-1+(loopIncrement*i))+loop;
+        y(loopStart+(loopLength*i):loopEnd-1+(loopLength*i))=y(loopStart+(loopLength*i):loopEnd-1+(loopLength*i))+loop;
     end
     %y = [y, signal(loopEnd+1:end)];
 
