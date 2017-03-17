@@ -121,17 +121,21 @@ the following section.
 see figure~\ref{} for illustration of loop
 selection based on these features.
 \subsection{Feature analysis/loop selection}
-Having extracted relevant features, analysis is then performed to determine
-the stability of the audio.  A moving standard deviation is taken for each of
-the three features, creating 3 vectors to measure the spread of these features
-over time.  An iteratively increasing threshold is applied to the standard
+Having extracted relevant features, analysis is then performed to determine the
+stability of the audio.  A moving standard deviation is taken for each of the
+three features, creating 3 vectors to measure the spread of these features over
+time.  An iteratively increasing threshold is then applied to the standard
 deviation measurements, searching for segments of consecutive frames to be used
 for looping. A frame is considered viable if it's length was greater than it's
 mean fundamental period multiplied by the minimum number of periods set as a
-parameter.\\
+parameter. An example of segmentation based on standard deviation values is
+illustrated in figure~\ref{}.\\
 Upon finding a suitable frame, positive zero crossings are searched for around
 it's starting index and the closest multiple to the mean $f_0$ period at the end
-point. These values form the final start and end indexes for the loop.
+point. This was to implemented to account for inaccuracies in estimation of the
+segment's pitch and to help ensure an integer number of periods were selected
+for a segment. These values form the final start and end indexes for the loop.
+Segmentation of audio based on zero-crossing is illustrated in figure~\ref{}
 
 \subsection{Synthesis}
 Output is then synthesized by segmenting the audio into three sections (start,
@@ -139,35 +143,52 @@ loop and end) and inserting an integer number of loops in place of
 the loop segment found. The number of loops inserted is calculated based on the
 duration provided in samples, and the closest number of loops to the desired
 overall length of the sample is used.
-Initially a method using overlap-add with crossfading was tested, however, this
-was not used because amplitude modulation detracted from overall quality
-
+Initially a method using overlap-add with crossfading was tested. However, this
+was eventually discarded as it was decided that the amplitude modulation
+created detracted significantly from the overall quality of output.
 
 \section{Evaluation}
-minimum period proved to be the primary parameter used for tuning the system.
-Low values resulted in the selection of smaller loops, with less variation in
-content over time. Too small and the loop would sound synthetic without
-variation. High values resulted in larger loops with more variation. Hiigher
-variation clearly sounded more natural but increased the chance of
-dicontinuities due to sudden changes at loop points. careful splicing of
-samples at zero crossings made sure there were no clicks at loop points (see
-figure~\ref{} for illustartion of segmentation at zero crossings) but
-long samples will evolve over time, thus inheriantly not looping well.
-a reasonable value of 25 periods was found to provide a good trade off between
-these two charachteristics.
+The system was evaluated by increasing the duration of a selection of single
+note samples (original samples included in \texttt{./OriginalAudio}). It was
+assumed for the purpose of evaluation, that the system would be used for
+increasing single note durations of harmonic instruments for use in software
+samplers, for example. It is likely that the system would not perform well on
+polyphonic recordings of percussive instruments.\\
+The minimum period allowed for a viable segment proved to be the primary
+parameter used for tuning the system.  Low values resulted in the selection of
+smaller loops, with less variation in content over time. Too small, and the
+loop would sound synthetic without variation. High values resulted in larger
+loops with more variation. Higher variation clearly sounded more natural but
+increased the chance of discontinuities due to sudden changes at loop points.
+Careful splicing of samples at zero crossings ensured smooth transitions at
+loop points.  However, long samples will evolve over time, thus inherently not
+looping well due to the lack of continuity between the segment's start and
+finish.  A reasonable value of 25 periods was found to provide a good trade off
+between these two characteristics.\\
 A range of audio files were tested using the system. Each was stretched by a
-duration of 1.5 time it's origonal duration. This was the only duration tested
+duration of 1.5 time it's original duration. This was the only duration tested
 significantly as the system is not designed to handle anything less than the
-original duration of the sample and further duration would simply add more
-loops.
-vibrato a key problem with cello. multiples of the vobrato's period as well as
-the frequency would need to be selected for better handeling on this. 
-Vocal vibrato performed possibly the worst. This was entirely expected as
-statically looping audio with such temporal variation will resulted in clearly
-unatural results.
-Instruments with the least variation such as the trumpet and tombone appeared
-to perform best, with only minor variations in amplitude missing from the
-looped section.
+original duration of the sample and further durations would simply add more
+loops.\\
+Instruments with the least variation in amplitude and spectral content over
+time (such as the trumpet and trombone) appeared to perform best, with only
+minor variations in amplitude noticeably missing from the looped section.
+Across the range of samples, it was clear that vibrato posed a key problem
+with this style of synthesis. This was particularly clear in the cello results,
+as looped segments did not preserve the oscillations of the vibrato, creating a
+clearly synthetic loop. This would need to be addressed, possibly by segmenting
+based on multiples of the vibrato's period in addition to the frequency.\\
+Vocal vibrato performed possibly the worst of all samples. This was entirely
+expected as statically looping audio with such temporal variation will resulted
+in clearly natural results.\\
+Other instruments that have clear decays, such as the piano and guitar, were
+synthesized to a reasonable degree with correct selection of the minimum
+period. The most noticeable effect was in the sudden sustain of the note. This
+is obviously not possible with these types of instruments and so these are
+perhaps less useful examples for demonstration of this system.
+
+Parametrisation of moving standard deviation window size not tested
+Use of varying window sizes not tested
 
 \subsection{Possible improvements}
 searching for start/end of periods
