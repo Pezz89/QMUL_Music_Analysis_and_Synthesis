@@ -2,7 +2,7 @@ function main()
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % User settings
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    audioFile = './media/vibrato.wav';
+    audioFile = './media/sguitar.aiff';
     %Load audiofile
     [x, FS] = audioread(audioFile);
 
@@ -18,10 +18,10 @@ function main()
     % Set F0 harmonicity threshold
     p.fDelta = 0;
 
-    p.minPeriod = 25;
+    p.minPeriod = 1;
 
     % Plot results using python script
-    p.pyplot = false;
+    p.pyplot = true;
 
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -31,6 +31,8 @@ function main()
     if size(x, 2) ~= 1
         x = sum(x,size(x,2))*0.5;
     end
+    % Normalise audio
+    x = x/max(x);
     x = x';
 
     % Calculate start and end indexes in samples for loop
@@ -39,6 +41,7 @@ function main()
     if p.pyplot
         s.loopInds = loopInds;
         save('./loopInds.mat', '-struct', 's');
+        [status,cmdout] = system('./GeneratePlots.py');
     end
 
     y = loop(x, length(x) * p.ratio, loopInds, p);

@@ -10,8 +10,7 @@ function loopInds = loopPoints(signal, p)
         s.sf = sf;
         s.rms = rms';
         s.f0 = f0;
-        save('./analysis.mat', '-struct', 's');
-        [status,cmdout] = system('./GeneratePlots.py');
+        save('./analysis1.mat', '-struct', 's');
     end
 
     if ~isfield(p, 'minPeriod'); p.minPeriod=350; end
@@ -28,21 +27,21 @@ function loopInds = loopPoints(signal, p)
 
     % Calculate the standard deviation of consecutive frames to measure the
     % spread of values over time
-    sfstd = movstd(sf, 3);
-    rmsstd = movstd(rms, 3);
-    f0Transstd = movstd(f0Trans, 3);
+    sfstd = abs(movstd(sf, 3));
+    rmsstd = abs(movstd(rms, 3));
+    f0Transstd = abs(movstd(f0Trans, 3));
     if p.pyplot
         s.sf = sfstd;
         s.rms = rmsstd';
         s.f0 = f0Transstd;
-        save('./analysis.mat', '-struct', 's');
+        save('./analysis2.mat', '-struct', 's');
         [status,cmdout] = system('./GeneratePlots.py');
     end
     % Inharmonic frames are set to the maximum standard deviation +10% as they
     % are most likely to be worse for looping than harmonic frames
     f0Transstd(inharmonicMask) = max(f0Transstd) + max(f0Transstd)*0.1;
 
-    p.thresholdInc = 0.0001;
+    p.thresholdInc = 0.00005;
     sfInc = p.thresholdInc * (max(sfstd(silenceMask)) - min(sfstd(silenceMask)));
     rmsInc = p.thresholdInc * (max(rmsstd(silenceMask)) - min(rmsstd(silenceMask)));
     f0TransInc = p.thresholdInc * (max(f0Transstd(silenceMask)) - min(f0Transstd(silenceMask)));
@@ -92,9 +91,22 @@ function loopInds = loopPoints(signal, p)
         segEnd = (t_e * p.hop) + round(p.wsize/2);
         segLength = segEnd - segStart;
         viableSegs = (((1./f0AvrSeg)*p.FS)*minNoPeriods) < segLength;
+
         if any(viableSegs)
-            segLength(~viableSegs) = Inf;
-            [~, ind] = min(segLength);
+            vt_s = t_s(viableSegs)';
+            vt_e = t_e(viableSegs)';
+            RMSStdAvrSeg = [];
+            f0StdAvrSeg = [];
+            sFStdAvrSeg = [];
+            for i=1:length(vt_s)
+                RMSStdAvrSeg = [RMSStdAvrSeg, mean(rmsstd(vt_s(i):vt_e(i)))];
+                f0StdAvrSeg = [f0StdAvrSeg, mean(f0Transstd(vt_s(i):vt_e(i)))];
+                sFStdAvrSeg = [sFStdAvrSeg, mean(sfstd(vt_s(i):vt_e(i)))];
+            end
+            match = zeros(1, length(segLength));
+            match(~viableSegs) = Inf;
+            match(viableSegs) = RMSStdAvrSeg + f0StdAvrSeg + sFStdAvrSeg;
+            [~, ind] = min(match);
             finalStart = segStart(ind);
             finalEnd = segEnd(ind);
             finalMF0 = f0AvrSeg(ind);

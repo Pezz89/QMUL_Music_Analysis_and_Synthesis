@@ -14,5 +14,5 @@ function [f0, f0Trans] = calcF0(x, p)
     % place data roughly around the center of the chroma spectrum
     f = f - (median(f(mask))+6);
 
-    % Wrap octaves to remove octave error
-    f0Trans(mask) = mod(f(mask), 12);
+    % Wrap octaves to remove octave error (and normalise to range of 0-1)
+    f0Trans(mask) = mod(f(mask), 12)/12;

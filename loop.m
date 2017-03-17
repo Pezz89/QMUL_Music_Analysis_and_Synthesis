@@ -18,10 +18,10 @@ function y = loop(signal, duration, loopPoints, p)
     y(1:loopStart-1) = signal(1:loopStart-1);
 
     if p.pyplot
-        figure
-        plot(signal(loopStart-40:loopEnd+40))
-        hold on
-        plot([zeros(1, 40), signal(loopStart:loopEnd-1), zeros(1, 41)])
+        n = 300
+        s.raw = signal(loopStart-n:loopEnd+n);
+        s.clipped = [zeros(1, n), signal(loopStart:loopEnd-1), zeros(1, n+1)];
+        save('./analysis3.mat', '-struct', 's');
     end
 
     loop = signal(loopStart:loopEnd-1);
