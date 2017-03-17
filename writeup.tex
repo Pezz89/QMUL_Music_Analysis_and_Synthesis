@@ -187,10 +187,21 @@ period. The most noticeable effect was in the sudden sustain of the note. This
 is obviously not possible with these types of instruments and so these are
 perhaps less useful examples for demonstration of this system.
 
-Parametrisation of moving standard deviation window size not tested
-Use of varying window sizes not tested
+\subsection{Known bugs}
+At present there is only one clear bug with the system, having tested using a
+selection of reasonable inputs. If minimum periods is set so low that
+zero-crossing selection of start and end times converge on the same point, this
+may not be handled correctly by the system in all cases. This is an edge case
+that is unlikely to occur.
+It is also noted that returned audio from \texttt{loop(signal, duration,
+loopPoints, p)} may not be of the exact duration specified as an argument in
+samples. This is due to the closest integer multiple of loops having been used.
+This is considered a caveat rather than a bug as it is expected and does not
+have a significantly negative impact on the system.
 
 \subsection{Possible improvements}
+Parametrisation of moving standard deviation window size not tested
+Use of varying window sizes not tested
 searching for start/end of periods
 output duration isn't sample accurate
 Gradient ascent could be applied for accurate and more efficient calculation
