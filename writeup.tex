@@ -117,9 +117,9 @@ where $f_k$ is the current frequency estimate, $n$ is the current estimate
 mapped to the semi-tone pitch spectrum and $\mu$ is the median of all $n$.
 This significantly improved the measurement of pitch spread  as discussed in
 the following section.
+Illustration of normalised feature values for a single guitar note can be seen
+in figure~\ref{Guitar14RawFeatures}
 
-see figure~\ref{} for illustration of loop
-selection based on these features.
 \subsection{Feature analysis/loop selection}
 Having extracted relevant features, analysis is then performed to determine the
 stability of the audio.  A moving standard deviation is taken for each of the
@@ -128,14 +128,17 @@ time.  An iteratively increasing threshold is then applied to the standard
 deviation measurements, searching for segments of consecutive frames to be used
 for looping. A frame is considered viable if it's length was greater than it's
 mean fundamental period multiplied by the minimum number of periods set as a
-parameter. An example of segmentation based on standard deviation values is
-illustrated in figure~\ref{}.\\
+parameter. From these viable frames, the frame with the lowest accumulated
+average standard deviation is chosen to be the best match. An example of
+segmentation based on standard deviation values is illustrated in
+figure~\ref{Guitar14StdDevSeg}.\\
 Upon finding a suitable frame, positive zero crossings are searched for around
 it's starting index and the closest multiple to the mean $f_0$ period at the end
 point. This was to implemented to account for inaccuracies in estimation of the
 segment's pitch and to help ensure an integer number of periods were selected
 for a segment. These values form the final start and end indexes for the loop.
-Segmentation of audio based on zero-crossing is illustrated in figure~\ref{}
+Segmentation of audio based on zero-crossing is illustrated in
+figure~\ref{ZeroX}
 
 \subsection{Synthesis}
 Output is then synthesized by segmenting the audio into three sections (start,
@@ -222,6 +225,23 @@ could be implemented to improve overall performance:
 \end{itemize}
 
 \section{Figures}
+\begin{figure}[H]
+    \caption{Raw normalised feature values and segmentation (minimum period
+    length = 14)}
+    \makebox[\textwidth]{\includegraphics[width=1.2\textwidth]{Guitar14RawFeatures}}
+    \label{Guitar14RawFeatures}
+\end{figure}
+\begin{figure}[H]
+    \caption{Standard deviation of features and segment selection (minimum period
+    length = 14)}
+    \makebox[\textwidth]{\includegraphics[width=1.2\textwidth]{Guitar14StdDevSeg}}
+    \label{Guitar14StdDevSeg}
+\end{figure}
+\begin{figure}[H]
+    \caption{Zero-crossing segmentation of audio (Minimum period length = 3)}
+    \makebox[\textwidth]{\includegraphics[width=1.2\textwidth]{ZeroX}}
+    \label{ZeroX}
+\end{figure}
 
 \printbibliography
 
