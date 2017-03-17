@@ -8,6 +8,7 @@ function [f0, f0Trans] = calcF0(x, p)
     % by zero error
     f0Trans = zeros(size(f));
     mask = f > 0;
+
     % Map to semi-tone pitch spectrum
     f(mask) = 12*log2(f(mask)/440.0)+69.0;
 

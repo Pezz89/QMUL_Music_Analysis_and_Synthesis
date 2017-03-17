@@ -25,41 +25,52 @@ function loopInds = loopPoints(signal, p)
     silenceMask = rms > silenceThresh;
     inharmonicMask = f0Trans == 0;
 
-    % Calculate the standard deviation of consecutive frames to measure the
-    % spread of values over time
+    % Calculate the absolute standard deviation of consecutive frames to
+    % measure the spread of values over time
     sfstd = abs(movstd(sf, 3));
     rmsstd = abs(movstd(rms, 3));
-    f0Transstd = abs(movstd(f0Trans, 3));
+    f0TransStd = abs(movstd(f0Trans, 3));
+
+    % Plot standard deviation of features in python
     if p.pyplot
         s.sf = sfstd;
         s.rms = rmsstd';
-        s.f0 = f0Transstd;
+        s.f0 = f0TransStd;
         save('./analysis2.mat', '-struct', 's');
         [status,cmdout] = system('./GeneratePlots.py');
     end
+
     % Inharmonic frames are set to the maximum standard deviation +10% as they
     % are most likely to be worse for looping than harmonic frames
-    f0Transstd(inharmonicMask) = max(f0Transstd) + max(f0Transstd)*0.1;
+    f0TransStd(inharmonicMask) = max(f0TransStd) + max(f0TransStd)*0.1;
 
+    % Set an increment factor as a percentage of the range for each feature
     p.thresholdInc = 0.00005;
     sfInc = p.thresholdInc * (max(sfstd(silenceMask)) - min(sfstd(silenceMask)));
     rmsInc = p.thresholdInc * (max(rmsstd(silenceMask)) - min(rmsstd(silenceMask)));
-    f0TransInc = p.thresholdInc * (max(f0Transstd(silenceMask)) - min(f0Transstd(silenceMask)));
-    f0Transthresh = min(f0Transstd(silenceMask));
+    f0TransInc = p.thresholdInc * (max(f0TransStd(silenceMask)) - min(f0TransStd(silenceMask)));
+    % Set thresholds to the minimum value of each of the features
+    f0Transthresh = min(f0TransStd(silenceMask));
     rmsthresh = min(rmsstd(silenceMask));
     sfthresh = min(sfstd(silenceMask));
     loopFound = false;
 
+    % Search for groups of frames that are long enough to form a segment based
+    % on incrementing thresholds
     while ~loopFound
+        % Increment thresholds
         f0Transthresh = f0Transthresh + f0TransInc;
         rmsthresh = rmsthresh + rmsInc;
         sfthresh = sfthresh + sfInc;
-        if f0Transthresh > max(f0Transstd)*1.4 || rmsthresh > max(rmsstd)*1.4 || ...
+        % If the threshold is larger than the maximum values of all features
+        % and a frame has not been found, error.
+        % TODO: Set this to a less arbritrary number than 1.4...
+        if f0Transthresh > max(f0TransStd)*1.4 || rmsthresh > max(rmsstd)*1.4 || ...
             sfthresh > max(sfstd)*1.4
             error('No segments found, try lowering the minimum period count or increment rate');
         end
         % Find frames below thresholds for each feature
-        f0TransCandidates = find(f0Transstd < f0Transthresh);
+        f0TransCandidates = find(f0TransStd < f0Transthresh);
         rmscandidates = find(rmsstd < rmsthresh);
         sfcandidates = find(sfstd < sfthresh);
 
@@ -93,6 +104,8 @@ function loopInds = loopPoints(signal, p)
         viableSegs = (((1./f0AvrSeg)*p.FS)*minNoPeriods) < segLength;
 
         if any(viableSegs)
+            % Find the segment with the lowest accumulated standard deviation
+            % accross all features
             vt_s = t_s(viableSegs)';
             vt_e = t_e(viableSegs)';
             RMSStdAvrSeg = [];
@@ -100,13 +113,16 @@ function loopInds = loopPoints(signal, p)
             sFStdAvrSeg = [];
             for i=1:length(vt_s)
                 RMSStdAvrSeg = [RMSStdAvrSeg, mean(rmsstd(vt_s(i):vt_e(i)))];
-                f0StdAvrSeg = [f0StdAvrSeg, mean(f0Transstd(vt_s(i):vt_e(i)))];
+                f0StdAvrSeg = [f0StdAvrSeg, mean(f0TransStd(vt_s(i):vt_e(i)))];
                 sFStdAvrSeg = [sFStdAvrSeg, mean(sfstd(vt_s(i):vt_e(i)))];
             end
             match = zeros(1, length(segLength));
             match(~viableSegs) = Inf;
             match(viableSegs) = RMSStdAvrSeg + f0StdAvrSeg + sFStdAvrSeg;
+            % Choose the segment with the lowest accumulated average standard
+            % deviation
             [~, ind] = min(match);
+            % Get data for chosen segment
             finalStart = segStart(ind);
             finalEnd = segEnd(ind);
             finalMF0 = f0AvrSeg(ind);
@@ -152,10 +168,3 @@ function loopInds = loopPoints(signal, p)
         error('Segment length is 0. This shouldnt happen...')
     end
     loopInds = [round(finalStart), round(finalEnd)];
-
-    % Calculate start and end times for segments of consecutive frames
-    % Calculate the lengths of the start and end times
-    % Find the largest segment
-    % If no segment can be found, raise the threshold incremently until a
-    % suitably long segment is found.
-

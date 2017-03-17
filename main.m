@@ -18,7 +18,8 @@ function main()
     % Set F0 harmonicity threshold
     p.fDelta = 0;
 
-    p.minPeriod = 1;
+    % Set the minimum number of f0 periods that is allowed in a segment
+    p.minPeriod = 14;
 
     % Plot results using python script
     p.pyplot = true;
@@ -38,12 +39,14 @@ function main()
     % Calculate start and end indexes in samples for loop
     loopInds = loopPoints(x, p);
 
+    % Plot start and end indexes using python
     if p.pyplot
         s.loopInds = loopInds;
         save('./loopInds.mat', '-struct', 's');
         [status,cmdout] = system('./GeneratePlots.py');
     end
 
+    % Apply looping to stretch audio to required duration
     y = loop(x, length(x) * p.ratio, loopInds, p);
     audiowrite('./out.wav', y, p.FS);
 end

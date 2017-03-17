@@ -54,6 +54,7 @@ def main():
         lns6 = ax.axvline(x[s[1]], color='b', linestyle='--', label='Seg End')
 
         ax.set_xlim([0, 100])
+        ax2.set_xlim([0, 100])
 
         ax.set_xlabel('Time (samples)')
         ax.set_ylabel('Normalised values')
