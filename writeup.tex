@@ -24,6 +24,20 @@
     {./resources/},
 }
 \addbibresource{~/Documents/library.bib}
+\DeclareSourcemap{
+    \maps{
+        \map{ % Replaces '{\_}', '{_}' or '\_' with just '_'
+            \step[fieldsource=url,
+                  match=\regexp{\{\\\_\}|\{\_\}|\\\_},
+                  replace=\regexp{\_}]
+        }
+        \map{ % Replaces '{'$\sim$'}', '$\sim$' or '{~}' with just '~'
+            \step[fieldsource=url,
+                  match=\regexp{\{\$\\sim\$\}|\{\~\}|\$\\sim\$},
+                  replace=\regexp{\~}]
+        }
+    }
+}
 
 \newsavebox{\abstractbox}
 \renewenvironment{abstract}
@@ -83,9 +97,9 @@ refinement of segment boundaries and finally, the synthesis of the output audio
 based on the best segment found.
 
 \subsection{Feature extraction}
-Three features were chosen to provide as measure for the overall stability of
-the audio at any time in the audio. These features are fundamental frequency
-($f_0$), Root Mean Square and Spectral Flux.\\
+Three features were chosen as measurements for the overall stability at any
+time in the audio. These features are fundamental frequency ($f_0$), Root Mean
+Square and Spectral Flux.\\
 Spectral flux, used for measuring salience of spectral content, was calculated as:
 $$
 \text{SF}(n) =
@@ -96,7 +110,7 @@ the total number of bins and $n$ is the current sample
 index~\parencite{Lerch2012}.\\
 RMS was chosen as a simple measure for loudness and was calculated as:
 $$RMS(n) = \sqrt{\frac{1}{N}\sum_{i=i_s(n)}^{i_e(n)}{x(i)^2}}$$
-where $i$ represents indexes in the current frame of audio and N is the total
+where $i$ represents indexes in the current frame of audio and $N$ is the total
 number of indexes in the current frame~\parencite{Lerch2012}.
 
 An implementation of the YIN algorithm was adapted for fundamental frequency
@@ -104,7 +118,7 @@ estimation~\parencite[p352-353]{Zolzer2011}. This implementation was further
 modified to use parabolic interpolation for increased accuracy.
 It was also noticed that as the system would only be analysing audio of
 specific, relatively static pitches, it was not necessary to differentiate
-between different octaves. For this reason, the $f_0$ was wrapped and centred
+between octaves. For this reason, the $f_0$ was wrapped and centred
 using the chroma spectrum~\parencite[p.4]{Peeters2006} This allowed for the negation of octave errors
 commonly seen in auto-correlation based $f_0$ estimation algorithms. This was
 achieved by first mapping estimated frequencies to the semi-tone pitch
@@ -152,7 +166,7 @@ created detracted significantly from the overall quality of output.
 
 \section{Evaluation}
 The system was evaluated by increasing the duration of a selection of single
-note samples (original samples included in \texttt{./OriginalAudio}). It was
+note samples (original samples included in \texttt{./src/media}). It was
 assumed for the purpose of evaluation, that the system would be used for
 increasing single note durations of harmonic instruments for use in software
 samplers, for example. It is likely that the system would not perform well on
@@ -181,17 +195,19 @@ with this style of synthesis. This was particularly clear in the cello results,
 as looped segments did not preserve the oscillations of the vibrato, creating a
 clearly synthetic loop. This would need to be addressed, possibly by segmenting
 based on multiples of the vibrato's period in addition to the frequency.\\
-Vocal vibrato performed possibly the worst of all samples. This was entirely
-expected as statically looping audio with such temporal variation will resulted
-in clearly natural results.\\
+Vocal vibrato performed the worst of all samples. This was entirely expected as
+statically looping audio with such temporal and spectral variation throughout
+will result in clearly unnatural results.\\
 Other instruments that have clear decays, such as the piano and guitar, were
 synthesized to a reasonable degree with correct selection of the minimum
 period. The most noticeable effect was in the sudden sustain of the note. This
-is obviously not possible with these types of instruments and so these are
-perhaps less useful examples for demonstration of this system.
+is obviously not possible with these types of instruments in the real-world so
+would unavoidably sound unnatural. For this reason, these are perhaps less
+useful examples for demonstration of this system. However, they do loop
+relatively smoothly.
 
 \subsection{Known bugs}
-At present there is only one clear bug with the system, having tested using a
+At present there is only one clear know bug with the system, having tested using a
 selection of reasonable inputs. If the minimum periods is set so low that
 zero-crossing selection of start and end times converge on the same point, this
 may not be handled correctly by the system in all cases. This is an edge case
@@ -201,6 +217,8 @@ loopPoints, p)} may not be of the exact duration specified as an argument in
 samples. This is due to the closest integer multiple of loops having been used.
 This is considered a caveat rather than a bug as it is expected and does not
 have a significantly negative impact on the system.
+Further testing is required to determine any further problems that have been
+missed due to the relatively fast design and implementation process. 
 
 \subsection{Possible improvements}
 Given more time for development, a number of further improvements to the system
