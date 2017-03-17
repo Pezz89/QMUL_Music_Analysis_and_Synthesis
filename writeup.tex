@@ -80,14 +80,25 @@
 \subsection{Feature extraction}
 Used RMS, F0 and spectral flux, see figure~\ref{} for illustration of loop
 selection based on these features.
-Spectral flux used for salience of spectral content
-RMS used as a simple loudness measurement
-f0 was wrapped using the chroma spectrum to ignore octave errors:
+Spectral flux used for salience of spectral content was calculated as:
+$$ Insert math here...$$.
+RMS used as a simple loudness measurement and was calculated as:
+$$ Insert maths here $$.
+An implementation of the YIN algorithm was adapted for fundamental frequency
+estimation. Parabolic interpolation was also added for increased accuracy.
+It was noticed that as the system would only be analysing audio of specific,
+relatively static pitches, it was not necessary to differentiate between
+different octaves. For this reason, the F0 was wrapped and centred using the
+chroma spectrum. This allowed for the negation of octave errors commonly seen
+in auto-correlation based F0 estimation algorithms:
 $$ Insert math here...$$
+This significantly improved the measurement of pitch spread as discussed in
+the following section.
+
 \subsection{Feature analysis/loop selection}
 A moving standard deviation was then taken for each of the three features,
 creating 3 vectors to measure the spread of these features over time.
-An iteratively increasing threshold was apllied to the standard deviation
+An iteratively increasing threshold was applied to the standard deviation
 measurements, searching for segments of consecutive frames to be used for
 looping. A frame was considered viable if it's length was greater than it's
 mean fundamental period multiplied by the minimum number of periods set as a
@@ -95,9 +106,15 @@ parameter.
 Upon finding a suitable frame, positive zero crossings are searched for around
 it's starting index and the closest multiple to the mean f0 period at the end
 point. These values form the final start and end indexes for the loop.
+
 \subsection{Synthesis}
-crossfading tested, but not used because amplitude modulation detracted from
-overall quality
+Output is then synthesized by segmenting the audio into three sections (start,
+loop and end) and inserting an integer number of loops in place of
+the loop segment found. The number of loops inserted is calculated based on the
+duration provided in samples, and the closest number of loops to the desired
+overall length of the sample is used.
+Initially a method using overlap-add with crossfading was tested, however, this
+was not used because amplitude modulation detracted from overall quality
 
 
 \section{Evaluation}
@@ -127,6 +144,13 @@ to perform best, with only minor variations in amplitude missing from the
 looped section.
 
 \subsection{Possible improvements}
+searching for start/end of periods
+output duration isn't sample accurate
+Gradient ascent could be applied for accurate and more efficient calculation
+of thresholds for audio segmentation.
+
+handeling of vibrato
+
 \section{Figures}
 
 \end{document}
