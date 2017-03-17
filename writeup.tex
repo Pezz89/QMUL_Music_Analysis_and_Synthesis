@@ -76,13 +76,15 @@
 
 \maketitle
 
-\section{}
+\section{Task Solution}
+\subsection{Feature extraction}
 Used RMS, F0 and spectral flux, see figure~\ref{} for illustration of loop
 selection based on these features.
 Spectral flux used for salience of spectral content
 RMS used as a simple loudness measurement
 f0 was wrapped using the chroma spectrum to ignore octave errors:
 $$ Insert math here...$$
+\subsection{Feature analysis/loop selection}
 A moving standard deviation was then taken for each of the three features,
 creating 3 vectors to measure the spread of these features over time.
 An iteratively increasing threshold was apllied to the standard deviation
@@ -93,10 +95,12 @@ parameter.
 Upon finding a suitable frame, positive zero crossings are searched for around
 it's starting index and the closest multiple to the mean f0 period at the end
 point. These values form the final start and end indexes for the loop.
+\subsection{Synthesis}
 crossfading tested, but not used because amplitude modulation detracted from
 overall quality
 
 
+\section{Evaluation}
 minimum period proved to be the primary parameter used for tuning the system.
 Low values resulted in the selection of smaller loops, with less variation in
 content over time. Too small and the loop would sound synthetic without
@@ -122,5 +126,7 @@ Instruments with the least variation such as the trumpet and tombone appeared
 to perform best, with only minor variations in amplitude missing from the
 looped section.
 
+\subsection{Possible improvements}
+\section{Figures}
 
 \end{document}
