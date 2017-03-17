@@ -2,10 +2,11 @@ function main()
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % User settings
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    audioFile = './media/ssax.aiff';
+    audioFile = './media/vibrato.wav';
     %Load audiofile
     [x, FS] = audioread(audioFile);
 
+    p.ratio = 1.5;
     % Set samplerate
     p.FS = FS;
     % set f0 minimum and maximum period thresholds
@@ -40,7 +41,7 @@ function main()
         save('./loopInds.mat', '-struct', 's');
     end
 
-    y = loop(x, length(x) * 1.5, loopInds, p);
+    y = loop(x, length(x) * p.ratio, loopInds, p);
     audiowrite('./out.wav', y, p.FS);
 end
 
