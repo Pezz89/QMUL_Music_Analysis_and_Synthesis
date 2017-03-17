@@ -189,7 +189,7 @@ perhaps less useful examples for demonstration of this system.
 
 \subsection{Known bugs}
 At present there is only one clear bug with the system, having tested using a
-selection of reasonable inputs. If minimum periods is set so low that
+selection of reasonable inputs. If the minimum periods is set so low that
 zero-crossing selection of start and end times converge on the same point, this
 may not be handled correctly by the system in all cases. This is an edge case
 that is unlikely to occur.
@@ -200,14 +200,26 @@ This is considered a caveat rather than a bug as it is expected and does not
 have a significantly negative impact on the system.
 
 \subsection{Possible improvements}
-Parametrisation of moving standard deviation window size not tested
-Use of varying window sizes not tested
-searching for start/end of periods
-output duration isn't sample accurate
-Gradient ascent could be applied for accurate and more efficient calculation
-of thresholds for audio segmentation.
-
-handeling of vibrato
+Given more time for development, a number of further improvements to the system
+could be implemented to improve overall performance:
+\begin{itemize}
+    \item The parametrisation of moving standard deviation window size could
+        be tested and would likely yield variations in segment selection
+    \item The use of varying analysis window sizes was not tested, and other
+        window sizes than the 2048 default may also benefit results.
+    \item It is not guaranteed that the start and end segment indexes mark
+        start/end points of periods of the signal (Despite a reasonable amount
+        of effort to ensure this). Further research would need to be undertaken
+        into ways of improving the selection of these indexes.
+    \item Currently, threshold are applied to all features at set increments.
+        The testing between incrementation of each feature may offer more
+        precise classification of frames on each iteration. Gradient ascent
+        could also be applied for accurate and more efficient calculation of
+        segments.
+    \item Further improvements could be made in an attempt to deal with the
+        effects of vibrato. Providing a further feature for this may aid in the
+        segmentation of audio.
+\end{itemize}
 
 \section{Figures}
 
