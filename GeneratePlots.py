@@ -30,7 +30,7 @@ def main():
         plt.xlim([0, len(x)])
         plt.savefig('ZeroX.png')
 
-    if False:
+    if True:
         dpi = 100
         fig = plt.figure(figsize=(1707/dpi, (846)/dpi), dpi=dpi)
         s1 = io.loadmat("./analysis1.mat")
@@ -73,7 +73,7 @@ def main():
         plt.savefig('Segmentation.png')
 
     # Plot analysis 2
-    if False:
+    if True:
         dpi = 100
         fig = plt.figure(figsize=(1707/dpi, (846)/dpi), dpi=dpi)
         s1 = io.loadmat("./analysis2.mat")

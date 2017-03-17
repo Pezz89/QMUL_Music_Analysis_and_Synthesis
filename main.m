@@ -22,7 +22,7 @@ function main()
     p.minPeriod = 14;
 
     % Plot results using python script
-    p.pyplot = true;
+    p.pyplot = false;
 
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -32,8 +32,6 @@ function main()
     if size(x, 2) ~= 1
         x = sum(x,size(x,2))*0.5;
     end
-    % Normalise audio
-    x = x/max(x);
     x = x';
 
     % Calculate start and end indexes in samples for loop

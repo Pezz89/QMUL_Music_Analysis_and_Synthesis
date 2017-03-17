@@ -59,6 +59,9 @@ function pitch = yin(x,p)
                 while tau < taumax && (yinTemp(tau+1) < yinTemp(tau))
                     tau = tau+1;
                 end
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                % Apply parabolic interpolation to refine f0 estimate
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                 tp1 = yinTemp(tau+1);
                 tm1 = yinTemp(tau-1);
                 t = yinTemp(tau);

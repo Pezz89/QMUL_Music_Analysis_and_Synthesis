@@ -5,7 +5,7 @@ function r = RMS(signal, p)
     if ~isfield(p, 'FS'); error('Samplerate not provided to RMS function'); end
 
     if min(size(signal)) ~= 1; error('data should be 1D'); end
-    x=signal(:);
+    x=signal(:)/max(signal(:));
     nsamples=numel(x);
 
     nframes=floor((nsamples-p.wsize)/p.hop);
