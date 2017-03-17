@@ -77,9 +77,50 @@
 \maketitle
 
 \section{}
-Used RMS, F0 and spectral flux
-f0 was wrapped using the chroma spectrum to ignore octave errors
+Used RMS, F0 and spectral flux, see figure~\ref{} for illustration of loop
+selection based on these features.
 Spectral flux used for salience of spectral content
 RMS used as a simple loudness measurement
+f0 was wrapped using the chroma spectrum to ignore octave errors:
+$$ Insert math here...$$
+A moving standard deviation was then taken for each of the three features,
+creating 3 vectors to measure the spread of these features over time.
+An iteratively increasing threshold was apllied to the standard deviation
+measurements, searching for segments of consecutive frames to be used for
+looping. A frame was considered viable if it's length was greater than it's
+mean fundamental period multiplied by the minimum number of periods set as a
+parameter. 
+Upon finding a suitable frame, positive zero crossings are searched for around
+it's starting index and the closest multiple to the mean f0 period at the end
+point. These values form the final start and end indexes for the loop.
+crossfading tested, but not used because amplitude modulation detracted from
+overall quality
+
+
+minimum period proved to be the primary parameter used for tuning the system.
+Low values resulted in the selection of smaller loops, with less variation in
+content over time. Too small and the loop would sound synthetic without
+variation. High values resulted in larger loops with more variation. Hiigher
+variation clearly sounded more natural but increased the chance of
+dicontinuities due to sudden changes at loop points. careful splicing of
+samples at zero crossings made sure there were no clicks at loop points (see
+figure~\ref{} for illustartion of segmentation at zero crossings) but
+long samples will evolve over time, thus inheriantly not looping well.
+a reasonable value of 25 periods was found to provide a good trade off between
+these two charachteristics.
+A range of audio files were tested using the system. Each was stretched by a
+duration of 1.5 time it's origonal duration. This was the only duration tested
+significantly as the system is not designed to handle anything less than the
+original duration of the sample and further duration would simply add more
+loops.
+vibrato a key problem with cello. multiples of the vobrato's period as well as
+the frequency would need to be selected for better handeling on this. 
+Vocal vibrato performed possibly the worst. This was entirely expected as
+statically looping audio with such temporal variation will resulted in clearly
+unatural results.
+Instruments with the least variation such as the trumpet and tombone appeared
+to perform best, with only minor variations in amplitude missing from the
+looped section.
+
 
 \end{document}
